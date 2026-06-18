@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solved · Jan 2024 Regular · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="s-jan2024.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Solved Paper · 27 January 2024 · Closed book</span>
+  <h1>Jan 2024 Regular — full solutions</h1>
+  <p class="lead">Five questions spanning the elements of RL &amp; the TD rule, bandit ε-greedy, MDP returns, policy iteration, and Monte-Carlo value estimation.</p>
+  <button class="btn ghost no-print" onclick="revealAll()">Reveal all solutions</button>
+
+  <!-- Q1 -->
+  <div class="qcard"><div class="qhead"><span class="marks">6 marks</span><span class="qno">Question 1 · Tic-tac-toe, elements &amp; TD</span></div><div class="qbody">
+    <h4>(a) Four elements of RL + the role of each. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <ol>
+        <li><strong>Policy</strong> — a mapping \(\pi(a\mid s)\) from states to actions; it defines the agent’s behaviour (which move to make in a board position).</li>
+        <li><strong>Reward signal</strong> — a scalar received each step defining the goal (e.g. +1 win, −1 loss, 0 otherwise); the agent cannot change it, only act to maximise it.</li>
+        <li><strong>Value function</strong> — \(v_\pi(s)\)/\(q_\pi(s,a)\): the expected long-run return from a state (or state-action); it predicts total future reward, guiding move selection beyond immediate reward.</li>
+        <li><strong>Model</strong> (optional) — \(p(s',r\mid s,a)\): the agent’s representation of the environment used to plan ahead; methods without it are model-free.</li>
+      </ol>
+      <p class="small">See <a href="t1-rl-fundamentals.html#elements">Topic ① · elements</a>.</p>
+    </div>
+
+    <h4>(b) Temporal-difference rule for a state value + explain. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ V(S_t)\leftarrow V(S_t)+\alpha\big[\,R_{t+1}+\gamma V(S_{t+1})-V(S_t)\,\big] \]</div>
+      <ul>
+        <li>\(\alpha\) — step size (learning rate): fraction of the error we move.</li>
+        <li>\(R_{t+1}+\gamma V(S_{t+1})\) — the <strong>TD target</strong>: a bootstrapped estimate of the return using the observed reward and the <em>current</em> estimate of the next state.</li>
+        <li>\(\delta_t=R_{t+1}+\gamma V(S_{t+1})-V(S_t)\) — the <strong>TD error</strong> (“surprise”).</li>
+      </ul>
+      <p><strong>Working:</strong> after each move we nudge the current state’s value toward the reward-plus-discounted-next-value; positive error raises it, negative lowers it. Updates happen online, every step, without waiting for the game to end.</p>
+    </div>
+
+    <h4>(c) Revise V using (b): V=4.5, successors=2.7, parameter 0.9. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Take \(\alpha=\gamma=0.9\) (“0.9 for any parameter”) and \(R_{t+1}=0\) (no reward stated), \(V(S_{t+1})=2.7\):</p>
+      <div class="mathblock">\[ V\leftarrow 4.5+0.9\big[0+0.9(2.7)-4.5\big]=4.5+0.9(2.43-4.5)=4.5+0.9(-2.07) \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(V = 4.5-1.863 = \mathbf{2.637}\). The estimate <em>drops</em> because the successors (2.7) are worth far less than the optimistic current value 4.5, giving a negative TD error.</div>
+    </div>
+  </div></div>
+
+  <!-- Q2 -->
+  <div class="qcard"><div class="qhead"><span class="marks">6 marks</span><span class="qno">Question 2 · Multi-armed bandit</span></div><div class="qbody">
+    <h4>(a) A use-case modellable as a MAB. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p><strong>Online ad selection.</strong> <em>Arms</em> = the \(k\) candidate ads; <em>action</em> = which ad to display to an incoming user; <em>reward</em> = 1 if clicked, else 0; the same decision recurs every impression and the choice does <strong>not</strong> change the next user’s situation (single state). Goal: maximise total clicks. All MAB elements present: fixed action set, stochastic reward per arm, no state transition.</p>
+    </div>
+    <h4>(b) ε-greedy bandit pseudocode + efficiency. <span class="small">[2.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <pre><code>Initialise, for a = 1..k:
+    Q(a) ← 0 ;  N(a) ← 0
+loop forever:
+    A ← argmax_a Q(a)        with probability 1−ε   (exploit)
+        a random action      with probability ε     (explore)
+    R ← bandit(A)
+    N(A) ← N(A) + 1
+    Q(A) ← Q(A) + (1/N(A)) · [R − Q(A)]</code></pre>
+      <p><strong>Efficiency:</strong> \(O(1)\) time and memory per step (incremental update). It always eventually finds the best arm, but it is wasteful — it keeps exploring even arms already known to be poor, and never stops exploring while ε &gt; 0.</p>
+    </div>
+    <h4>(c) How does it balance exploration vs exploitation? <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>With probability \(1-\varepsilon\) it <em>exploits</em> (takes the current best arm, banking known reward); with probability \(\varepsilon\) it <em>explores</em> (samples a random arm to improve estimates). The fixed ε guarantees every arm keeps being sampled, so a genuinely-better arm is eventually discovered, while most pulls still earn from the best-known arm. Larger ε ⇒ more exploration; smaller ε ⇒ more exploitation.</p>
+    </div>
+  </div></div>
+
+  <!-- Q3 -->
+  <div class="qcard"><div class="qhead"><span class="marks">6 marks</span><span class="qno">Question 3 · MDP tasks, returns, value expression</span></div><div class="qbody">
+    <h4>(a) Two different MDP example tasks (states, actions, rewards). <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="tbl-wrap"><table>
+        <tr><th class="l">Task</th><th class="l">States</th><th class="l">Actions</th><th class="l">Reward</th></tr>
+        <tr><td class="l">Thermostat</td><td class="l">room temperature bins</td><td class="l">heat / cool / off</td><td class="l">−|temp − target| − energy cost</td></tr>
+        <tr><td class="l">Maze robot</td><td class="l">grid cell</td><td class="l">N/E/S/W</td><td class="l">+1 at goal, −1 per step</td></tr>
+      </table></div>
+      <p class="small">Make them maximally different: one continuing/control, one episodic/navigation.</p>
+    </div>
+    <h4>(b) Returns, γ = 0.8. <span class="small">[3]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p><strong>(i) Episodic, T=5, R = (1, 2, 6, 3, 2).</strong></p>
+      <div class="mathblock">\[ G_0=1+0.8(2)+0.8^2(6)+0.8^3(3)+0.8^4(2)=1+1.6+3.84+1.536+0.8192=\mathbf{8.7952} \]</div>
+      <div class="mathblock">\[ G_1=2+0.8(6)+0.8^2(3)+0.8^3(2)=2+4.8+1.92+1.024=\mathbf{9.744} \]</div>
+      <p class="small">Check: \(G_0=R_1+\gamma G_1=1+0.8(9.744)=8.7952\) ✓</p>
+      <p><strong>(ii) Continuing, R₁ = 2 then infinite 0s.</strong> \(G_0=2+\gamma\cdot0+\dots=\mathbf{2}\); \(G_1=\mathbf{0}\) (all future rewards are 0).</p>
+    </div>
+    <h4>(c) Full expression for \(v_\pi(s)\) or \(q_\pi(s,a)\). <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ v_\pi(s)=\sum_a\pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\big[r+\gamma v_\pi(s')\big] \]</div>
+    </div>
+  </div></div>
+
+  <!-- Q4 -->
+  <div class="qcard"><div class="qhead"><span class="marks">6 marks</span><span class="qno">Question 4 · Policy iteration &amp; DP suitability</span></div><div class="qbody">
+    <h4>(a) What is Policy Evaluation vs Policy Improvement; use in finding π*. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p><strong>Policy Evaluation</strong>: given a fixed policy \(\pi\), iteratively solve the Bellman expectation equation to obtain its value function \(v_\pi\) (predict how good \(\pi\) is). <strong>Policy Improvement</strong>: given \(v_\pi\), construct \(\pi'(s)=\arg\max_a\sum p(s',r\mid s,a)[r+\gamma v_\pi(s')]\), a policy that is provably no worse (policy-improvement theorem). Alternating the two — evaluation makes value consistent with policy, improvement makes policy greedy w.r.t. value — converges to the optimal pair \((v_*,\pi_*)\).</p>
+    </div>
+    <h4>(b) High-level policy-iteration algorithm. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <pre><code>1. Initialise π arbitrarily, V(s)=0 ∀s
+2. POLICY EVALUATION:
+     repeat: for each s:  V(s) ← Σ p(s',r | s,π(s)) [r + γV(s')]
+     until max change &lt; θ
+3. POLICY IMPROVEMENT:
+     stable ← true
+     for each s:
+        a* ← argmax_a Σ p(s',r | s,a)[r + γV(s')]
+        if a* ≠ π(s): π(s) ← a* ; stable ← false
+4. if stable: return (V≈v*, π≈π*)  else go to 2</code></pre>
+      <p class="small">(Assumes a known model and a finite state/action space.)</p>
+    </div>
+    <h4>(c) When is DP appropriate? Two examples. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>DP suits problems that are <strong>Markov</strong>, have a <strong>fully known model</strong> \(p(s',r\mid s,a)\), and a <strong>small/finite</strong> state-action space that can be swept exhaustively. Examples: gambler’s problem (coin-flip dynamics known); small gridworld navigation; inventory control with a known demand distribution; the recycling robot.</p>
+    </div>
+  </div></div>
+
+  <!-- Q5 -->
+  <div class="qcard"><div class="qhead"><span class="marks">6 marks</span><span class="qno">Question 5 · Monte-Carlo value estimation</span></div><div class="qbody">
+    <h4>(a) Estimate V(A) and V(B) from the episodes. <span class="small">[2]</span></h4>
+    <pre><code>A 2 A 6 B 1 B 0 T
+A 3 B 2 A 4 B 2 B 0 T
+A 0 B 2 A 4 B 4 B 2 B 0 T
+B 8 B 0 T</code></pre>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="callout warn"><div class="cico">📝</div><div class="cbody">The paper says “5 episodes” but lists 4 — treated as a typo; we use the 4 given. No γ is stated, so take the standard \(\gamma=1\) (undiscounted): each return = sum of rewards from that visit to T.</div></div>
+      <p><strong>First-visit</strong> (first occurrence of the state in each episode):</p>
+      <ul>
+        <li>A: episode-1 first-A = 2+6+1+0 = 9; ep-2 = 3+2+4+2+0 = 11; ep-3 = 0+2+4+4+2+0 = 12 → mean = (9+11+12)/3 = <strong>32/3 ≈ 10.67</strong></li>
+        <li>B: ep-1 first-B = 1+0 = 1; ep-2 = 2+4+2+0 = 8; ep-3 = 2+4+4+2+0 = 12; ep-4 = 8+0 = 8 → mean = (1+8+12+8)/4 = <strong>29/4 = 7.25</strong></li>
+      </ul>
+      <p><strong>Every-visit</strong> (all occurrences):</p>
+      <ul>
+        <li>A returns: 9,7,11,6,12,10 → mean = 55/6 ≈ <strong>9.17</strong></li>
+        <li>B returns: 1,0,8,2,0,12,6,2,0,8,0 → mean = 39/11 ≈ <strong>3.55</strong></li>
+      </ul>
+      <div class="answer-final"><span class="lbl">Answer</span> First-visit: V(A) ≈ 10.67, V(B) = 7.25. &nbsp; Every-visit: V(A) ≈ 9.17, V(B) ≈ 3.55. <span class="small">(If your section uses first-visit, quote the first pair; show the method either way.)</span></div>
+    </div>
+    <h4>(b) MC techniques for the exploration/exploitation balance. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <ul>
+        <li><strong>Exploring starts</strong> — start episodes from random (s,a) so every action gets sampled.</li>
+        <li><strong>On-policy ε-soft policies</strong> — behave with a policy that gives every action probability ≥ ε/|𝒜|, guaranteeing continual exploration.</li>
+        <li><strong>Off-policy learning</strong> — explore with a soft behaviour policy \(b\) while learning the greedy target \(\pi\) (via importance sampling).</li>
+      </ul>
+    </div>
+    <h4>(c) How are ε-soft &amp; ε-greedy related? 4-action example. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>ε-greedy is a <em>special case</em> of ε-soft. An ε-soft policy is any with \(\pi(a\mid s)\ge\varepsilon/|\mathcal A|\) for all \(a\); ε-greedy puts the leftover mass on the greedy action.</p>
+      <p><strong>Example</strong> — state with 4 actions, greedy = a₃, ε = 0.4 ⇒ ε/|𝒜| = 0.1:</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>action</th><th>a₁</th><th>a₂</th><th>a₃ (greedy)</th><th>a₄</th></tr>
+        <tr><td>π</td><td>0.1</td><td>0.1</td><td class="hl">1−ε+ε/4 = 0.7</td><td>0.1</td></tr>
+      </table></div>
+      <p>Greedy action: \(1-0.4+0.1=0.7\); each other: \(0.4/4=0.1\); total = 1. Every action keeps non-zero probability (ε-soft), with the greedy one dominant (ε-greedy).</p>
+    </div>
+  </div></div>
+
+  <div class="pager">
+    <a href="s-dec2025.html"><div class="dir">← Prev paper</div><div class="ttl">Dec 2025</div></a>
+    <a class="next" href="s-jul2023.html"><div class="dir">Next paper →</div><div class="ttl">Jul 2023 (Open Book)</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

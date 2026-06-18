@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>③ Markov Decision Processes · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="t3-mdps.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Topic ③ · MDPs</span>
+  <h1>Markov Decision Processes</h1>
+  <p class="lead">The formal language of RL. If you can (a) <strong>formulate</strong> a scenario as an MDP, (b) write the <strong>Bellman equations</strong> with their backup diagrams, and (c) reason about how \(\gamma\) and reward scaling affect the solution, you’ve covered the bulk of the theory marks.</p>
+
+  <div class="toc"><h4>On this page</h4><ul>
+    <li><a href="#def">What an MDP is (5 components)</a></li>
+    <li><a href="#markov">The Markov property &amp; dynamics</a></li>
+    <li><a href="#policy-value">Policies &amp; value functions</a></li>
+    <li><a href="#bellman">Bellman expectation equations</a></li>
+    <li><a href="#backup">Backup diagrams</a></li>
+    <li><a href="#optimal">Optimality: v*, q*, π*</a></li>
+    <li><a href="#scaling">Reward scaling &amp; sign</a></li>
+    <li><a href="#formulate">How to formulate an MDP</a></li>
+    <li><a href="#quiz">Check yourself</a></li>
+  </ul></div>
+
+  <h2 id="def">1. The five components</h2>
+  <p>A finite MDP is a tuple \(\langle \mathcal S,\mathcal A,p,R,\gamma\rangle\):</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Symbol</th><th class="l">Name</th><th class="l">Meaning</th></tr>
+    <tr><td>\(\mathcal S\)</td><td class="l">States</td><td class="l">All situations the agent can be in</td></tr>
+    <tr><td>\(\mathcal A\)</td><td class="l">Actions</td><td class="l">Choices available (possibly state-dependent \(\mathcal A(s)\))</td></tr>
+    <tr><td>\(p(s',r\mid s,a)\)</td><td class="l">Dynamics</td><td class="l">Probability of next state \(s'\) and reward \(r\)</td></tr>
+    <tr><td>\(R\)</td><td class="l">Reward</td><td class="l">Scalar feedback defining the goal</td></tr>
+    <tr><td>\(\gamma\)</td><td class="l">Discount</td><td class="l">Weight on future reward, \([0,1]\)</td></tr>
+  </table></div>
+
+  <h2 id="markov">2. The Markov property</h2>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">“The future depends on the present, not the past”</div>
+  A state is <em>Markov</em> if it summarises everything relevant: \(\Pr\{S_{t+1},R_{t+1}\mid S_t,A_t\} = \Pr\{S_{t+1},R_{t+1}\mid S_0,A_0,\dots,S_t,A_t\}\). Given the current state and action, the history adds no information. This is what lets us write recursive (Bellman) equations.</div></div>
+  <p>The dynamics fully specify the environment. Marginals you’ll use:</p>
+  <div class="mathblock">\[ p(s'\mid s,a)=\sum_r p(s',r\mid s,a), \qquad r(s,a)=\sum_{s',r} r\,p(s',r\mid s,a) \]</div>
+
+  <h2 id="policy-value">3. Policies and value functions</h2>
+  <p>A <strong>policy</strong> \(\pi(a\mid s)\) gives the probability of taking action \(a\) in state \(s\). The two value functions measure long-run desirability under \(\pi\):</p>
+  <div class="mathblock">\[ v_\pi(s)=\mathbb E_\pi\!\big[G_t\mid S_t=s\big], \qquad q_\pi(s,a)=\mathbb E_\pi\!\big[G_t\mid S_t=s,A_t=a\big] \]</div>
+  <p><strong>\(v_\pi(s)\)</strong> = expected return starting from \(s\) and following \(\pi\). <strong>\(q_\pi(s,a)\)</strong> = expected return starting from \(s\), taking \(a\) <em>first</em>, then following \(\pi\). They’re linked:</p>
+  <div class="mathblock">\[ v_\pi(s)=\sum_a \pi(a\mid s)\,q_\pi(s,a) \]</div>
+
+  <h2 id="bellman">4. Bellman expectation equations</h2>
+  <p>Substitute the recursion \(G_t=R_{t+1}+\gamma G_{t+1}\) into the definitions and you get equations that relate a value to its successors:</p>
+  <div class="callout formula"><div class="cico">📐</div><div class="cbody"><div class="ctitle">State-value</div>
+  <div class="mathblock">\[ v_\pi(s)=\sum_a \pi(a\mid s)\sum_{s',r} p(s',r\mid s,a)\big[r+\gamma\,v_\pi(s')\big] \]</div></div></div>
+  <div class="callout formula"><div class="cico">📐</div><div class="cbody"><div class="ctitle">Action-value (the recursive \(q_\pi\) — Jul 2024-makeup Q4b)</div>
+  <div class="mathblock">\[ q_\pi(s,a)=\sum_{s',r} p(s',r\mid s,a)\Big[r+\gamma\sum_{a'}\pi(a'\mid s')\,q_\pi(s',a')\Big] \]</div>
+  Its recursive nature means a value is defined in terms of the <em>same</em> function at successor states — this self-consistency is what iterative solvers (DP) exploit.</div></div>
+
+  <h3>Worked — recycling-robot q-values (Jul 2024-regular Q4a)</h3>
+  <div class="callout formula"><div class="cico">🤖</div><div class="cbody">
+  States {high, low}; from <code>high</code>, <code>search</code> keeps you high w.p. \(\alpha\) (reward \(r_\text{search}\)) or drops you to low w.p. \(1-\alpha\) (also \(r_\text{search}\)). Then:
+  <div class="mathblock">\[ q_\pi(\text{high},\text{search}) = r_\text{search} + \gamma\big[\alpha\,v_\pi(\text{high}) + (1-\alpha)\,v_\pi(\text{low})\big] \]</div>
+  And the optimal version replaces \(v_\pi\) with \(v_*=\max_{a'} q_*(\cdot,a')\):
+  <div class="mathblock">\[ q_*(\text{high},\text{search}) = r_\text{search} + \gamma\big[\alpha\,v_*(\text{high}) + (1-\alpha)\,v_*(\text{low})\big] \]</div>
+  </div></div>
+
+  <h2 id="backup">5. Backup diagrams</h2>
+  <p>A backup diagram shows how value flows from successors back to a state. Open circles = states, solid dots = actions.</p>
+  <svg class="diagram" viewBox="0 0 560 230" role="img" aria-label="state value backup diagram">
+    <circle cx="280" cy="34" r="12" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+    <text x="280" y="38" text-anchor="middle" font-size="12" font-weight="700">s</text>
+    <text x="300" y="30" class="lbl">value v&#960;(s)</text>
+    <line class="edge" x1="280" y1="46" x2="200" y2="92"/>
+    <line class="edge" x1="280" y1="46" x2="360" y2="92"/>
+    <text x="225" y="80" class="lbl">π(a|s)</text>
+    <circle cx="200" cy="100" r="7" fill="var(--text)"/>
+    <circle cx="360" cy="100" r="7" fill="var(--text)"/>
+    <text x="150" y="104" class="lbl">action a</text>
+    <text x="372" y="104" class="lbl">action a'</text>
+    <line class="edge" x1="200" y1="107" x2="150" y2="160"/>
+    <line class="edge" x1="200" y1="107" x2="250" y2="160"/>
+    <line class="edge" x1="360" y1="107" x2="320" y2="160"/>
+    <line class="edge" x1="360" y1="107" x2="410" y2="160"/>
+    <text x="185" y="140" class="lbl">p, r</text>
+    <circle cx="150" cy="168" r="11" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+    <circle cx="250" cy="168" r="11" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+    <circle cx="320" cy="168" r="11" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+    <circle cx="410" cy="168" r="11" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+    <text x="280" y="208" text-anchor="middle" class="lbl">successor states s′ (value v_π(s′))</text>
+  </svg>
+  <p class="small">Read it top-down: average over actions (weighted by \(\pi\)), then over outcomes (weighted by \(p\)), accumulating reward \(r\) plus discounted successor value.</p>
+
+  <h2 id="optimal">6. Optimality</h2>
+  <p>The optimal value functions take the <strong>max</strong> over actions instead of averaging under a fixed policy:</p>
+  <div class="mathblock">\[ v_*(s)=\max_a \sum_{s',r}p(s',r\mid s,a)\big[r+\gamma v_*(s')\big] \]</div>
+  <div class="mathblock">\[ q_*(s,a)=\sum_{s',r}p(s',r\mid s,a)\big[r+\gamma \max_{a'} q_*(s',a')\big] \]</div>
+  <p>An <strong>optimal policy</strong> is greedy w.r.t. \(q_*\): \(\pi_*(s)=\arg\max_a q_*(s,a)\). Knowing \(q_*\) makes choosing actions trivial — no model or look-ahead needed.</p>
+  <div class="callout info"><div class="cico">🧭</div><div class="cbody"><div class="ctitle">What you need to find \(v_*\) (Jul 2024-reg Q3c)</div>
+  To compute the optimal value function you need a <strong>complete model</strong>: the states, actions, the dynamics \(p(s',r\mid s,a)\) (transition probabilities + rewards), and the discount \(\gamma\). With those, value iteration / policy iteration solves it exactly.</div></div>
+
+  <h2 id="scaling">7. Reward scaling and reward signs</h2>
+  <div class="callout intuition"><div class="cico">✖️</div><div class="cbody"><div class="ctitle">Multiply all rewards by 10? (Jul 2023 Q1d)</div>
+  Every value scales by 10 too: \(v'(s)=10\,v(s)\) (linearity of the Bellman equation). But the <strong>optimal policy is unchanged</strong> — multiplying by a positive constant preserves the <em>ordering</em> of action values, and the policy only depends on which action is largest.</div></div>
+  <div class="callout intuition"><div class="cico">➕➖</div><div class="cbody"><div class="ctitle">Do reward signs matter, or only the gaps? (Jul 2024-makeup Q3a)</div>
+  For <em>episodic</em> tasks where a constant is <strong>added</strong> to every reward, only the <em>intervals</em> (differences) between rewards matter for the optimal policy — adding a constant \(c\) to all rewards shifts every return by the same amount and doesn’t change which policy is best. <strong>But</strong> in <em>continuing</em> tasks a constant added to every step changes the infinite discounted sum unequally, so it <em>can</em> matter. The classic gridworld caveat: adding a constant can remove the urgency to reach the goal if it makes “stalling” rewarding.</div></div>
+
+  <h2 id="formulate">8. How to formulate any scenario as an MDP</h2>
+  <p>A reliable recipe (use it for Dec 2025 Q2, Jul 2023 Q1, any “formulate the MDP” prompt):</p>
+  <ol class="steps">
+    <li><strong>States</strong> — what does the agent need to know to decide? (ICU: {lowO₂, OptimalO₂, highO₂}.)</li>
+    <li><strong>Actions</strong> — the controllable choices. (ICU: {increase, decrease, maintain} pressure.)</li>
+    <li><strong>Transitions</strong> \(p(s'\mid s,a)\) — including given probabilities (ICU: increase/decrease leaves health unchanged w.p. 0.4; maintain always preserves state) and equal-likelihood assumptions for the rest.</li>
+    <li><strong>Rewards</strong> — encode the goal (reach OptimalO₂ good; over-ventilation / highO₂ bad).</li>
+    <li><strong>Discount \(\gamma\)</strong> and the <strong>terminal</strong> condition (four consecutive Optimal readings ⇒ stabilised).</li>
+  </ol>
+  <div class="callout pitfall"><div class="cico">⚠️</div><div class="cbody"><div class="ctitle">Reward-design pitfall (Dec 2025 Q2b)</div>
+  Rewarding only “lowO₂ → OptimalO₂” (+10) encourages reaching the target but says nothing about leaving it. Penalising “OptimalO₂ → highO₂” (−70) actively discourages over-ventilation. Design B is safer when over-ventilation is the real danger; combine both for a policy that both reaches <em>and stays</em> in the safe zone.</div></div>
+
+  <h2 id="quiz">9. Check yourself</h2>
+  <div class="quiz">
+    <div class="qz-q">Q1. \(q_\pi(s,a)\) differs from \(v_\pi(s)\) because it…</div>
+    <div class="qz-opt" data-correct="1">fixes the first action to \(a\), then follows \(\pi\)</div>
+    <div class="qz-opt" data-correct="0">ignores the discount factor</div>
+    <div class="qz-opt" data-correct="0">is only defined for terminal states</div>
+    <div class="qz-opt" data-correct="0">requires no policy</div>
+    <div class="qz-exp">\(q_\pi(s,a)\) commits to action \(a\) now and follows \(\pi\) afterward; \(v_\pi(s)=\sum_a\pi(a|s)q_\pi(s,a)\).</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q2. You multiply every reward in an MDP by 10. The optimal policy…</div>
+    <div class="qz-opt" data-correct="1">is unchanged; values scale by 10</div>
+    <div class="qz-opt" data-correct="0">changes completely</div>
+    <div class="qz-opt" data-correct="0">becomes random</div>
+    <div class="qz-opt" data-correct="0">is undefined</div>
+    <div class="qz-exp">Positive scaling preserves the ordering of action-values, so \(\arg\max\) (the policy) is unchanged; only the magnitude of \(v\) scales.</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q3. The Bellman <em>optimality</em> equation differs from the expectation equation by…</div>
+    <div class="qz-opt" data-correct="0">dropping the discount</div>
+    <div class="qz-opt" data-correct="1">replacing \(\sum_a\pi(a|s)\) with \(\max_a\)</div>
+    <div class="qz-opt" data-correct="0">removing the reward term</div>
+    <div class="qz-opt" data-correct="0">summing over time instead of states</div>
+    <div class="qz-exp">Optimality takes the best action (max) rather than averaging over a fixed policy.</div>
+  </div>
+
+  <div class="pager">
+    <a href="t2-bandits.html"><div class="dir">← Prev</div><div class="ttl">② Multi-Armed Bandits</div></a>
+    <a class="next" href="t4-dynamic-programming.html"><div class="dir">Next →</div><div class="ttl">④ Dynamic Programming</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

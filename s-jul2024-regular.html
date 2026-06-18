@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solved · Jul 2024 Regular · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="s-jul2024-regular.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Solved Paper · 21 July 2024 · Closed book</span>
+  <h1>Jul 2024 Regular — full solutions</h1>
+  <p class="lead">Rewards vs returns, whether α can drive exploration, the optimistic/UCB table, recycling-robot q-values, the classic maze reward-design trap, and an ε-soft Monte-Carlo control sweep.</p>
+  <button class="btn ghost no-print" onclick="revealAll()">Reveal all solutions</button>
+
+  <!-- Q1 -->
+  <div class="qcard"><div class="qhead"><span class="marks">5 marks</span><span class="qno">Question 1 · Rewards, TD &amp; algorithm types</span></div><div class="qbody">
+    <h4>(a) How are rewards and returns connected? <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>The return is the (discounted) sum of future rewards: \(G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots=\sum_{k\ge0}\gamma^k R_{t+k+1}\), with the recursion \(G_t=R_{t+1}+\gamma G_{t+1}\). A reward is the one-step signal; the return aggregates rewards over time — and it is the return (via value) that the agent maximises.</p></div>
+    <h4>(b) TD for tic-tac-toe: can α encourage exploration? <span class="small">[3]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="answer-final"><span class="lbl">No</span> α is the step size in \(V(S_t)\leftarrow V(S_t)+\alpha[R_{t+1}+\gamma V(S_{t+1})-V(S_t)]\).</div>
+      <p><strong>Why not:</strong> α only controls <em>how fast value estimates move</em> toward the TD target — it changes learning speed and stability, not <em>which actions are tried</em>. Exploration is a property of the <em>action-selection</em> rule (e.g. ε-greedy / softmax), which decides whether to take a non-greedy move. Turning α up or down never makes the agent visit new states; it just re-weights updates for the states it already chooses to visit.</p>
+    </div>
+    <h4>(c) One model-based and one model-free algorithm. <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p><strong>Model-based:</strong> Value Iteration (or Policy Iteration). <strong>Model-free:</strong> Monte-Carlo control (or TD / Q-learning).</p></div>
+  </div></div>
+
+  <!-- Q2 -->
+  <div class="qcard"><div class="qhead"><span class="marks">5 marks</span><span class="qno">Question 2 · Exploration &amp; bandit framing</span></div><div class="qbody">
+    <h4>(a) No explicit exploration ⇒ is RL the same as supervised learning? <span class="small">[2.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="answer-final"><span class="lbl">No</span></div>
+      <p>(1) Even without explicit exploratory moves, the feedback is still <strong>evaluative</strong> (a reward saying how good the move was), not a supervised <strong>label</strong> giving the correct move — so the learning signal differs fundamentally. (2) The agent’s own greedy actions still <strong>determine the data distribution</strong> it sees (its moves change future states), whereas supervised learning is handed a fixed, independent labelled dataset. So it remains RL, just with poor exploration.</p>
+    </div>
+    <h4>(b) A situation where greedy beats ε-greedy. <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>When rewards are <strong>deterministic and stationary</strong>: one trial reveals each arm’s exact value, so any further exploration is wasted reward — pure greedy is optimal. (Also when there are very few steps left to benefit from new knowledge.)</p></div>
+    <h4>(c) A workplace MAB use-case. <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p><strong>Email subject-line / CTA testing.</strong> Arms = candidate subject lines; action = which line to send to the next recipient; reward = open/click (1/0); the decision recurs per recipient and doesn’t change future recipients’ state. Goal = maximise total opens. (Any “pick-one-of-k-options, observe reward, repeat, no state change” task qualifies — ad placement, model/endpoint selection, pricing tiers.)</p></div>
+  </div></div>
+
+  <!-- Q3 -->
+  <div class="qcard"><div class="qhead"><span class="marks">5 marks</span><span class="qno">Question 3 · Non-stationary MAB, exploration tricks</span></div><div class="qbody">
+    <h4>(a) Using the learning rule for a non-stationary MAB. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Use a <strong>constant</strong> step size: \(Q_{n+1}=Q_n+\alpha[R_n-Q_n]\), \(\alpha\in(0,1]\). (1) This is an exponential recency-weighted average — recent rewards get weight \(\alpha\), older ones decay by \((1-\alpha)\) per step, so the estimate <em>tracks</em> a value that drifts over time. (2) Unlike the \(1/n\) sample average (which converges and then stops adapting), constant α never stops adapting, which is exactly what a non-stationary problem needs.</p>
+    </div>
+    <h4>(b) Optimistic Initial Values &amp; UCB — when (not) to use. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="tbl-wrap"><table>
+        <tr><th class="l"></th><th>When it works</th><th>When it doesn’t</th></tr>
+        <tr><td class="l">Optimistic Initial Values</td><td>Stationary problems — drives broad early exploration with no ε needed</td><td>Non-stationary problems (one-time effect; can’t react to later change) / unknown reward scale</td></tr>
+        <tr><td class="l">UCB</td><td>Stationary bandits — directs exploration to the most uncertain arms</td><td>Non-stationary or very large action sets / full MDPs (computing the bonus is costly &amp; assumptions break)</td></tr>
+      </table></div>
+    </div>
+    <h4>(c) What info do you need to find the optimal value function? <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>The complete MDP: states, actions, the dynamics \(p(s',r\mid s,a)\) (transition probabilities and rewards), and the discount \(\gamma\). With those, value/policy iteration computes \(v_*\).</p></div>
+  </div></div>
+
+  <!-- Q4 -->
+  <div class="qcard"><div class="qhead"><span class="marks">5 marks</span><span class="qno">Question 4 · Recycling robot &amp; maze rewards</span></div><div class="qbody">
+    <h4>(a) Write q<sub>π</sub>(high, search) and q<sub>*</sub>(high, search). <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>From <code>high</code>, <code>search</code> stays high w.p. α (reward \(r_\text{search}\)) or drops to low w.p. 1−α (reward \(r_\text{search}\)):</p>
+      <div class="mathblock">\[ q_\pi(\text{high},\text{search})=r_\text{search}+\gamma\big[\alpha\,v_\pi(\text{high})+(1-\alpha)\,v_\pi(\text{low})\big] \]</div>
+      <div class="mathblock">\[ q_*(\text{high},\text{search})=r_\text{search}+\gamma\big[\alpha\,v_*(\text{high})+(1-\alpha)\,v_*(\text{low})\big] \]</div>
+      <p class="small">with \(v_*(s)=\max_{a}q_*(s,a)\). Equivalently \(q_*(\text{high},\text{search})=r_\text{search}+\gamma[\alpha\max_{a'}q_*(\text{high},a')+(1-\alpha)\max_{a'}q_*(\text{low},a')]\).</p>
+    </div>
+    <h4>(b) Maze: +1 for escape, 0 otherwise — no improvement. What’s wrong? Fix? <span class="small">[3]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p><strong>What’s wrong.</strong> With reward +1 only at escape and <strong>no discounting</strong> (or γ=1, undiscounted episodic), <em>every</em> policy that eventually escapes earns the same total return of +1 — whether it takes 10 steps or 10,000. So there is no signal that distinguishes a fast escape from a slow one; the agent has nothing to improve and shows no progress.</p>
+      <p><strong>How to fix</strong> (either works):</p>
+      <ul>
+        <li><strong>Discount the +1</strong>: use γ &lt; 1. Then escaping in fewer steps yields a larger return \(\gamma^{\,T}\), giving the agent a reason to escape sooner.</li>
+        <li><strong>Reshape rewards</strong>: give −1 per time step (and 0 at escape), so the agent maximises return by minimising steps to the exit.</li>
+      </ul>
+    </div>
+  </div></div>
+
+  <!-- Q5 -->
+  <div class="qcard"><div class="qhead"><span class="marks">5 marks</span><span class="qno">Question 5 · On-policy first-visit MC control (ε-soft)</span></div><div class="qbody">
+    <p>States {A,B,C,T}, actions {x,y,z}, γ = 0.8, initial Q = 0. Episodes (state–action–(reward)):</p>
+    <pre><code>E1: A x(+10) C y(+12) C x(0) T
+E2: A x(+10) C x(+2) B y(+12) C x(+20) T
+E3: C x(+2) B y(+12) C x(+20) T</code></pre>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p><strong>Step 1 — returns per episode (γ=0.8, work backward):</strong></p>
+      <ul>
+        <li><strong>E1:</strong> (C,x)=0; (C,y)=12+0.8(0)=12; (A,x)=10+0.8(12)=<strong>19.6</strong>.</li>
+        <li><strong>E2:</strong> last (C,x)=20; (B,y)=12+0.8(20)=28; (C,x)<sub>first</sub>=2+0.8(28)=<strong>24.4</strong>; (A,x)=10+0.8(24.4)=<strong>29.52</strong>.</li>
+        <li><strong>E3:</strong> (C,x)<sub>last</sub>=20; (B,y)=12+0.8(20)=28; (C,x)<sub>first</sub>=2+0.8(28)=<strong>24.4</strong>.</li>
+      </ul>
+      <p><strong>Step 2 — average first-visit returns:</strong></p>
+      <div class="tbl-wrap"><table>
+        <tr><th class="l">(s,a)</th><th>first-visit returns</th><th>Q = mean</th></tr>
+        <tr><td class="l">(A,x)</td><td>19.6, 29.52</td><td class="hl">24.56</td></tr>
+        <tr><td class="l">(B,y)</td><td>28, 28</td><td class="hl">28.0</td></tr>
+        <tr><td class="l">(C,x)</td><td>0, 24.4, 24.4</td><td class="hl">16.27</td></tr>
+        <tr><td class="l">(C,y)</td><td>12</td><td>12.0</td></tr>
+      </table></div>
+      <p class="small">(All other (s,a) stay 0. In E1, (C,x) at the end is the first visit to (C,x) for that episode ⇒ return 0; the (C,y) earlier is a separate action.)</p>
+      <p><strong>Step 3 — greedy then ε-greedy policy:</strong></p>
+      <div class="tbl-wrap"><table>
+        <tr><th>state</th><th>Q(x)</th><th>Q(y)</th><th>Q(z)</th><th>greedy</th></tr>
+        <tr><td>A</td><td class="hl">24.56</td><td>0</td><td>0</td><td>x</td></tr>
+        <tr><td>B</td><td>0</td><td class="hl">28.0</td><td>0</td><td>y</td></tr>
+        <tr><td>C</td><td class="hl">16.27</td><td>12.0</td><td>0</td><td>x</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Revised policy (ε-soft)</span> π(A)=x, π(B)=y, π(C)=x — each greedy action gets \(1-\varepsilon+\varepsilon/3\) and the other two \(\varepsilon/3\) each. (e.g. ε=0.3 ⇒ 0.8 / 0.1 / 0.1.)</div>
+    </div>
+  </div></div>
+
+  <div class="pager">
+    <a href="s-jul2023.html"><div class="dir">← Prev paper</div><div class="ttl">Jul 2023</div></a>
+    <a class="next" href="s-jul2024-makeup.html"><div class="dir">Next paper →</div><div class="ttl">Jul 2024 Makeup</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

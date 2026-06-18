@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>② Multi-Armed Bandits · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="t2-bandits.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Topic ② · Bandits</span>
+  <h1>Multi-Armed Bandits</h1>
+  <p class="lead">The simplest RL setting — one state, \(k\) actions — used to isolate the <strong>exploration vs. exploitation</strong> problem. Master the Q-value update, ε-greedy, UCB, and the “which moves were exploratory?” analysis, because those are guaranteed marks.</p>
+
+  <div class="toc"><h4>On this page</h4><ul>
+    <li><a href="#what">The k-armed bandit problem</a></li>
+    <li><a href="#bandit-vs-mdp">Bandit vs. MDP</a></li>
+    <li><a href="#q">Estimating action values</a></li>
+    <li><a href="#alpha">Sample-average vs. constant-α</a></li>
+    <li><a href="#eg">ε-greedy &amp; exploration</a></li>
+    <li><a href="#oiv-ucb">Optimistic values &amp; UCB</a></li>
+    <li><a href="#explore-analysis">“Which moves were exploratory?”</a></li>
+    <li><a href="#nusers">Many users → contextual bandits</a></li>
+    <li><a href="#quiz">Check yourself</a></li>
+  </ul></div>
+
+  <h2 id="what">1. The k-armed bandit problem</h2>
+  <p>You face \(k\) “arms” (actions). Each pull of arm \(a\) returns a reward drawn from an unknown distribution with mean \(q_*(a)=\mathbb E[R_t\mid A_t=a]\). There is <strong>no state transition</strong> — you return to the same situation each time. Goal: maximise total reward over many pulls, which means <em>learning</em> the \(q_*(a)\) while still <em>earning</em>.</p>
+  <div class="callout info"><div class="cico">🎰</div><div class="cbody"><div class="ctitle">A clean use-case (Jan 2024 Q2a / Jul 2024-reg Q2c)</div>
+  <strong>Ad / content selection:</strong> arms = which of \(k\) ads (or Netflix genres) to show; reward = click / rating; the same decision recurs for each impression; the goal is to maximise cumulative clicks. No action changes the next “state”, so it is a bandit, not a full MDP.</div></div>
+
+  <h2 id="bandit-vs-mdp">2. Bandit vs. finite MDP — the key distinction</h2>
+  <p>This is exactly <a href="s-dec2025.html">Dec 2025 Q1b</a>.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Multi-Armed Bandit</th><th>Finite MDP</th></tr>
+    <tr><td class="l">One state (or independent contexts). Your action does <strong>not</strong> change future situations or future reward distributions.</td><td class="l">Multiple states; the action influences the <strong>next state</strong>, so today’s choice changes tomorrow’s opportunities.</td></tr>
+    <tr><td class="l">Only immediate reward to optimise.</td><td class="l">Must optimise the long-run return (value), via Bellman equations.</td></tr>
+  </table></div>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">Decision rule for classifying</div>
+  Ask: <em>“Does choosing this action change what happens / what I can earn next time?”</em> No → bandit. Yes → MDP. In Dec 2025 Q1, Case 1 (mode choice doesn’t affect the future) is a <strong>bandit</strong>; Case 2 (Mode C raises battery temperature, lowering future rewards for power-hungry modes) introduces state-dependence, so it becomes an <strong>MDP</strong>.</div></div>
+
+  <h2 id="q">3. Estimating action values \(Q(a)\)</h2>
+  <p>The natural estimate of \(q_*(a)\) is the <strong>sample average</strong> of rewards seen so far from arm \(a\):</p>
+  <div class="mathblock">\[ Q_n(a)=\frac{R_1+R_2+\cdots+R_{n-1}}{n-1} \]</div>
+  <p>Computed <strong>incrementally</strong> (no need to store all rewards):</p>
+  <div class="mathblock">\[ Q_{n+1}=Q_n+\frac{1}{n}\big[R_n-Q_n\big] \]</div>
+  <p>This has the universal RL shape <em>NewEstimate ← OldEstimate + StepSize·(Target − OldEstimate)</em>.</p>
+
+  <h2 id="alpha">4. Sample-average vs. constant step-size (the α question)</h2>
+  <p>Replace the shrinking \(1/n\) with a fixed \(\alpha\in(0,1]\):</p>
+  <div class="mathblock">\[ Q_{n+1}=Q_n+\alpha\big[R_n-Q_n\big] \]</div>
+  <p>Unrolling this shows it is an <strong>exponential recency-weighted average</strong> — recent rewards get geometrically more weight than old ones:</p>
+  <div class="mathblock">\[ Q_{n+1}=(1-\alpha)^n Q_1+\sum_{i=1}^{n}\alpha(1-\alpha)^{\,n-i}R_i \]</div>
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">Step size</th><th>Weights</th><th>Use when</th></tr>
+    <tr><td class="l">\(1/n\) (sample average)</td><td>all rewards weighted equally; estimate converges</td><td><strong>Stationary</strong> — true values \(q_*(a)\) don’t change</td></tr>
+    <tr><td class="l">constant \(\alpha\)</td><td>recent rewards weighted more; never stops adapting</td><td><strong>Non-stationary</strong> — \(q_*(a)\) drifts over time</td></tr>
+  </table></div>
+  <div class="callout warn"><div class="cico">⚙️</div><div class="cbody"><div class="ctitle">Significance of α, and what α = 1 does (Dec 2025 Q3b)</div>
+  Larger \(\alpha\) ⇒ faster adaptation but noisier estimates. At \(\alpha=1\): \(Q_{n+1}=R_n\) — the estimate <em>forgets everything</em> and equals the last reward only. Great if the world changes every step; terrible if rewards are noisy, because one bad sample wipes out all history.</div></div>
+
+  <h3>Worked numerical — recency-weighted Q update (Dec 2025 Q3a)</h3>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody">
+  Interventions S, T, R, C; \(\alpha=0.5\); all \(Q\) start at 0. Observations in order:
+  <span class="small">(1,S,7) (2,T,5) (3,R,6) (4,C,4) (5,S,8) (6,T,6) (7,R,7) (8,C,5)</span>
+  <div class="tbl-wrap"><table>
+   <tr><th>t</th><th>arm</th><th>r</th><th>update \(Q\leftarrow Q+0.5(r-Q)\)</th><th>new Q</th></tr>
+   <tr><td>1</td><td>S</td><td>7</td><td>0+0.5(7−0)</td><td>3.5</td></tr>
+   <tr><td>2</td><td>T</td><td>5</td><td>0+0.5(5−0)</td><td>2.5</td></tr>
+   <tr><td>3</td><td>R</td><td>6</td><td>0+0.5(6−0)</td><td>3.0</td></tr>
+   <tr><td>4</td><td>C</td><td>4</td><td>0+0.5(4−0)</td><td>2.0</td></tr>
+   <tr><td>5</td><td>S</td><td>8</td><td>3.5+0.5(8−3.5)</td><td class="hl">5.75</td></tr>
+   <tr><td>6</td><td>T</td><td>6</td><td>2.5+0.5(6−2.5)</td><td class="hl">4.25</td></tr>
+   <tr><td>7</td><td>R</td><td>7</td><td>3.0+0.5(7−3.0)</td><td class="hl">5.0</td></tr>
+   <tr><td>8</td><td>C</td><td>5</td><td>2.0+0.5(5−2.0)</td><td class="hl">3.5</td></tr>
+  </table></div>
+  <div class="answer-final"><span class="lbl">Answer</span> Final \(Q(S)=5.75,\;Q(R)=5.0,\;Q(T)=4.25,\;Q(C)=3.5\). Best intervention = <strong>S (SMS refill reminder)</strong>.</div>
+  Try changing \(\alpha\) yourself on the <a href="tools.html">Interactive Tools</a> page.
+  </div></div>
+
+  <h2 id="eg">5. ε-greedy &amp; the exploration/exploitation trade-off</h2>
+  <p><strong>Exploitation</strong> = pick the arm that currently looks best (greedy). <strong>Exploration</strong> = try others to improve your estimates. You cannot do both on one pull — that is the trade-off. ε-greedy resolves it with a coin flip:</p>
+  <pre><code>Initialise Q(a)=0, N(a)=0 for all a
+loop for each step:
+    with probability 1-ε:  A ← argmax_a Q(a)      # exploit (greedy)
+    with probability ε:    A ← a random action     # explore
+    R ← reward for A
+    N(A) ← N(A)+1
+    Q(A) ← Q(A) + (1/N(A)) · [R − Q(A)]            # or + α[...] if non-stationary</code></pre>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">How this balances the trade-off</div>
+  A fraction \(1-\varepsilon\) of pulls bank reward from the best-known arm (exploit); the remaining \(\varepsilon\) keep sampling every arm, so no arm is starved and a truly-better arm is eventually discovered. Tune \(\varepsilon\): higher = more exploration (find the best arm faster but waste more pulls); lower = more exploitation. Efficiency note: ε-greedy is simple and effective but <em>wastes</em> exploration uniformly — it explores even arms already known to be bad.</div></div>
+  <div class="callout info"><div class="cico">🎯</div><div class="cbody"><div class="ctitle">When pure greedy beats ε-greedy (Jul 2024-reg Q2b)</div>
+  If the problem is <strong>deterministic and stationary</strong> (each arm returns a fixed reward with no noise), one pull reveals an arm’s true value, so exploration past the first round is pure waste — greedy is better. Greedy also wins when there is essentially no time left to benefit from new information (the last few pulls).</div></div>
+
+  <h2 id="oiv-ucb">6. Two smarter exploration tricks</h2>
+  <h3>Optimistic Initial Values</h3>
+  <p>Initialise \(Q_1(a)\) to a value <em>higher</em> than any plausible reward (e.g. \(Q_1=5\) when rewards are 0–3). Every arm then “disappoints” when first tried, so the agent is driven to try them all early — exploration for free, with no \(\varepsilon\).</p>
+  <div class="tbl-wrap"><table>
+    <tr><th class="l"></th><th>When it works</th><th>When it doesn’t</th></tr>
+    <tr><td class="l">Optimistic Initial Values</td><td>Stationary problems; drives early exploration without ε</td><td>Non-stationary problems (the optimism is a one-time effect; can’t handle change later)</td></tr>
+    <tr><td class="l">UCB</td><td>Stationary bandits; directs exploration to genuinely uncertain arms</td><td>Large/non-stationary or full-MDP settings; costly with huge action sets</td></tr>
+  </table></div>
+  <p class="small">↑ This is the exact table asked for in Jul 2024-regular Q3b.</p>
+
+  <h3>Upper Confidence Bound (UCB)</h3>
+  <div class="mathblock">\[ A_t=\arg\max_a\Big[\,Q_t(a)+c\sqrt{\tfrac{\ln t}{N_t(a)}}\,\Big] \]</div>
+  <p>Pick the arm with the highest <em>optimistic</em> estimate. The bonus \(c\sqrt{\ln t/N_t(a)}\) is large for arms tried rarely (small \(N_t(a)\)) — it measures <strong>uncertainty</strong>.</p>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">Significance of the confidence level c (Dec 2025 Q3c)</div>
+  \(c\) sets how much you trust uncertainty over current value. Larger \(c\) ⇒ wider confidence intervals ⇒ more exploration of rarely-tried arms (e.g. give the seldom-used “Counseling call” more chances before dismissing it). Smaller \(c\) ⇒ behave more greedily on current estimates. Unlike ε-greedy’s blind randomness, UCB explores the arms it is <em>most unsure about</em>.</div></div>
+
+  <h2 id="explore-analysis">7. “Which suggestions were exploratory?” — the method</h2>
+  <p>Appears on Dec 2025 Q3d, Jul 2023 Q2, Jul 2024-makeup Q3. Procedure:</p>
+  <ol class="steps">
+    <li>Before each step, list the current \(Q\)-values and find the <strong>greedy</strong> action (the arg-max).</li>
+    <li>If the chosen action is <strong>not</strong> a current max ⇒ it could only have come from the ε-branch ⇒ <strong>definitely exploratory</strong>.</li>
+    <li>If the chosen action <strong>is</strong> the (unique) greedy one ⇒ it was likely exploitation, but a random pick could also have landed there ⇒ <strong>possibly</strong> exploratory.</li>
+    <li>If all \(Q\)-values are tied (e.g. all equal at the start) ⇒ any action is “greedy-consistent” ⇒ also only <strong>possibly</strong> exploratory.</li>
+  </ol>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">Worked (Dec 2025 Q3d, using the α=0.5 Q-values above, steps 1–5)</div>
+  Sequence of arms: S, T, R, C, S.
+  <div class="tbl-wrap"><table>
+   <tr><th>t</th><th>chose</th><th>Q before (S,T,R,C)</th><th>greedy</th><th>verdict</th></tr>
+   <tr><td>1</td><td>S</td><td>0, 0, 0, 0</td><td>all tied</td><td class="hl-amber">possible (all tied)</td></tr>
+   <tr><td>2</td><td>T</td><td>3.5, 0, 0, 0</td><td>S</td><td class="hl">DEFINITE</td></tr>
+   <tr><td>3</td><td>R</td><td>3.5, 2.5, 0, 0</td><td>S</td><td class="hl">DEFINITE</td></tr>
+   <tr><td>4</td><td>C</td><td>3.5, 2.5, 3.0, 0</td><td>S</td><td class="hl">DEFINITE</td></tr>
+   <tr><td>5</td><td>S</td><td>3.5, 2.5, 3.0, 2.0</td><td>S</td><td class="hl-amber">possible (was greedy)</td></tr>
+  </table></div>
+  <div class="answer-final"><span class="lbl">Answer</span> (i) Definitely exploratory: <strong>t = 2, 3, 4</strong> (a non-greedy arm was chosen). (ii) Possibly exploratory: <strong>t = 1</strong> (all values tied) and <strong>t = 5</strong> (greedy arm, but a random draw could also pick S).</div>
+  </div></div>
+
+  <h2 id="nusers">8. Extending to many users → contextual bandits</h2>
+  <p>(Jul 2023 Q2e.) When \(n\) individuals have different tastes, either keep a <strong>separate bandit per user</strong>, or use a <strong>contextual bandit</strong> where the user’s identity/features form the <em>context</em> and \(Q\) becomes \(Q(\text{context},a)\). Optimistic initial values help the cold-start; share learning across similar users to converge faster.</p>
+
+  <h2 id="quiz">9. Check yourself</h2>
+  <div class="quiz">
+    <div class="qz-q">Q1. You suspect arm rewards drift over time. Which update do you use?</div>
+    <div class="qz-opt" data-correct="0">sample average \(1/n\)</div>
+    <div class="qz-opt" data-correct="1">constant step-size \(\alpha\)</div>
+    <div class="qz-opt" data-correct="0">never update Q</div>
+    <div class="qz-opt" data-correct="0">set \(\alpha=0\)</div>
+    <div class="qz-exp">A constant \(\alpha\) keeps weighting recent rewards more (exponential recency-weighting), so the estimate tracks a moving target. The \(1/n\) average assumes stationarity.</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q2. At step \(t\), \(Q=(a{:}1.5,\,b{:}3,\,c{:}1,\,d{:}4)\) and the agent picks \(b\). This pick is…</div>
+    <div class="qz-opt" data-correct="1">definitely exploratory</div>
+    <div class="qz-opt" data-correct="0">definitely greedy</div>
+    <div class="qz-opt" data-correct="0">impossible</div>
+    <div class="qz-opt" data-correct="0">UCB-driven</div>
+    <div class="qz-exp">\(d=4\) is the greedy action; \(b=3\) is not the max, so \(b\) could only have been chosen by the random ε-branch ⇒ definitely exploratory.</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q3. The UCB exploration bonus \(c\sqrt{\ln t/N_t(a)}\) is largest for an arm that…</div>
+    <div class="qz-opt" data-correct="1">has been tried few times</div>
+    <div class="qz-opt" data-correct="0">has the highest current Q</div>
+    <div class="qz-opt" data-correct="0">has been tried the most</div>
+    <div class="qz-opt" data-correct="0">gave the last reward</div>
+    <div class="qz-exp">Small \(N_t(a)\) (rarely tried) ⇒ large bonus ⇒ UCB prioritises the arms it is most uncertain about.</div>
+  </div>
+
+  <div class="pager">
+    <a href="t1-rl-fundamentals.html"><div class="dir">← Prev</div><div class="ttl">① RL Fundamentals</div></a>
+    <a class="next" href="t3-mdps.html"><div class="dir">Next →</div><div class="ttl">③ Markov Decision Processes</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

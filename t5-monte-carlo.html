@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⑤ Monte Carlo Methods · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="t5-monte-carlo.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Topic ⑤ · Learning from experience</span>
+  <h1>Monte Carlo Methods</h1>
+  <p class="lead">Model-free learning from <strong>complete episodes</strong>: just average the returns you actually observed. Master first-visit vs. every-visit, why control needs \(q\) not \(v\), how ε-soft policies keep exploring, and the off-policy importance-sampling ratio.</p>
+
+  <div class="toc"><h4>On this page</h4><ul>
+    <li><a href="#idea">The Monte Carlo idea</a></li>
+    <li><a href="#fv-ev">First-visit vs. every-visit</a></li>
+    <li><a href="#worked-v">Worked: V(A), V(B)</a></li>
+    <li><a href="#need-q">Why control needs \(q\), not \(v\)</a></li>
+    <li><a href="#explore">Keeping exploration alive</a></li>
+    <li><a href="#control">On-policy ε-soft control</a></li>
+    <li><a href="#worked-c">Worked: MC control sweep</a></li>
+    <li><a href="#offpolicy">Off-policy &amp; importance sampling</a></li>
+    <li><a href="#quiz">Check yourself</a></li>
+  </ul></div>
+
+  <h2 id="idea">1. The Monte Carlo idea</h2>
+  <p>If value is “expected return”, just <strong>play out whole episodes and average the returns</strong>. No model, no bootstrapping — only real, sampled experience.</p>
+  <div class="mathblock">\[ v_\pi(s)\approx \text{average of returns } G_t \text{ observed after visits to } s \]</div>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">MC vs. TD vs. DP in one line</div>
+  <strong>DP</strong>: bootstrap + model (no sampling). <strong>TD</strong>: bootstrap + sample (update every step). <strong>MC</strong>: sample + <em>no</em> bootstrap — wait until the episode ends, then use the actual return. MC therefore needs episodic tasks.</div></div>
+
+  <h2 id="fv-ev">2. First-visit vs. every-visit</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th>First-visit MC</th><th>Every-visit MC</th></tr>
+    <tr><td class="l">Average the return following only the <strong>first</strong> time \(s\) is visited in each episode.</td><td class="l">Average the return following <strong>every</strong> visit to \(s\), even repeats within an episode.</td></tr>
+    <tr><td class="l">Returns are independent ⇒ unbiased; classic convergence.</td><td class="l">Returns within an episode are correlated; also converges (biased for finite data but consistent).</td></tr>
+  </table></div>
+  <div class="callout info"><div class="cico">⚡</div><div class="cbody"><div class="ctitle">Which converges faster to \(v_*\)? (Jul 2023 Q4a)</div>
+  Every-visit uses more data points per episode, so with <em>few</em> episodes it often produces estimates sooner; first-visit gives cleaner, unbiased estimates. Both converge to the true value as episodes → ∞. In exam answers, note the data-efficiency vs. bias trade-off.</div></div>
+
+  <h2 id="worked-v">3. Worked — estimating V(A) and V(B) (Jan 2024 Q5)</h2>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody">
+  Episodes (numbers are rewards on leaving a state), \(\gamma=1\):
+  <pre><code>A 2 A 6 B 1 B 0 T
+A 3 B 2 A 4 B 2 B 0 T
+A 0 B 2 A 4 B 4 B 2 B 0 T
+B 8 B 0 T</code></pre>
+  With \(\gamma=1\) the return at any visit = sum of the rewards from that point to T. Collect them per state:
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">State</th><th>first-visit returns</th><th>V (first-visit)</th><th>every-visit returns</th><th>V (every-visit)</th></tr>
+    <tr><td class="l">A</td><td>9, 11, 12</td><td class="hl">32/3 ≈ 10.67</td><td>9,7,11,6,12,10</td><td class="hl">55/6 ≈ 9.17</td></tr>
+    <tr><td class="l">B</td><td>1, 8, 12, 8</td><td class="hl">29/4 = 7.25</td><td>1,0,8,2,0,12,6,2,0,8,0</td><td class="hl">39/11 ≈ 3.55</td></tr>
+  </table></div>
+  <span class="small">e.g. episode 1 “A 2 A 6 B 1 B 0”: first A return \(=2{+}6{+}1{+}0=9\); first B return \(=1{+}0=1\). Full derivation on the <a href="s-jan2024.html">Jan 2024 page</a>.</span>
+  </div></div>
+
+  <h2 id="need-q">4. Why estimating \(v_\pi\) alone is insufficient for control</h2>
+  <div class="callout pitfall"><div class="cico">🚫</div><div class="cbody"><div class="ctitle">The model-free control problem (Dec 2025 Q4a)</div>
+  To act greedily from \(v_\pi\) you’d need \(\arg\max_a\sum_{s',r}p(s',r\mid s,a)[r+\gamma v_\pi(s')]\) — which <strong>requires the model</strong> \(p\). In a model-free setting you don’t have \(p\), so a perfect \(v_\pi\) still doesn’t tell you which action is best. The fix: estimate <strong>action values \(q_\pi(s,a)\)</strong> directly — then \(\arg\max_a q_\pi(s,a)\) needs no model at all.</div></div>
+
+  <h2 id="explore">5. Keeping exploration alive</h2>
+  <p>MC learns about actions only by trying them. A deterministic greedy policy may never try some \((s,a)\) pairs, so their values are never learned and the policy can get stuck. Two fixes (Jul 2023 Q4c):</p>
+  <div class="grid c2">
+    <div class="card"><div class="k">Fix 1</div><h3>Exploring Starts</h3><p>Begin episodes from a <em>random</em> \((s,a)\) pair so every action in every state has a chance to be the starting move. Guarantees coverage; impractical if you can’t choose the start.</p></div>
+    <div class="card"><div class="k">Fix 2</div><h3>ε-soft policies</h3><p>Use a policy that gives <em>every</em> action probability \(\ge \varepsilon/|\mathcal A|>0\) (e.g. ε-greedy). No special starts needed — exploration is baked into the behaviour.</p></div>
+  </div>
+  <div class="callout pitfall"><div class="cico">⚠️</div><div class="cbody"><div class="ctitle">Why first-visit MC under a deterministic policy can fail (Dec 2025 Q4b)</div>
+  A deterministic policy always picks one action per state, so the alternative actions are <strong>never visited</strong> — their \(q\)-values stay at their initial estimates and can never be shown to be better. The policy can lock onto a sub-optimal action forever. <strong>Fix:</strong> make the policy ε-soft (or use exploring starts) so every action keeps getting sampled.</div></div>
+
+  <h2 id="control">6. On-policy first-visit MC control for ε-soft policies</h2>
+  <pre><code>Initialise Q(s,a)=0, Returns(s,a)=[] , π = arbitrary ε-soft
+for each episode:
+    generate S0,A0,R1,...,ST  following π
+    G ← 0
+    for t = T-1 down to 0:
+        G ← γG + R_{t+1}
+        if (S_t,A_t) is a FIRST visit:
+            append G to Returns(S_t,A_t)
+            Q(S_t,A_t) ← average(Returns(S_t,A_t))
+            A* ← argmax_a Q(S_t,a)              # greedy action
+            for all a:  π(a|S_t) ← { 1-ε+ε/|A|  if a=A*
+                                     ε/|A|        otherwise }</code></pre>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">ε-soft ⊃ ε-greedy</div>
+  An <strong>ε-soft</strong> policy is <em>any</em> policy with \(\pi(a\mid s)\ge \varepsilon/|\mathcal A|\) for all \(a\). <strong>ε-greedy</strong> is the specific ε-soft policy that puts all remaining mass on the greedy action: greedy gets \(1-\varepsilon+\varepsilon/|\mathcal A|\), the others \(\varepsilon/|\mathcal A|\) each. So every ε-greedy policy is ε-soft, but not vice-versa.</div></div>
+
+  <h2 id="worked-c">7. Worked — one MC-control sweep (Jul 2024-regular Q5)</h2>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody">
+  States {A,B,C,T}, actions {x,y,z}, \(\gamma=0.8\), initial \(Q=0\). Episodes (state-action-(reward)):
+  <pre><code>E1: A x(+10) C y(+12) C x(0) T
+E2: A x(+10) C x(+2) B y(+12) C x(+20) T
+E3: C x(+2) B y(+12) C x(+20) T</code></pre>
+  Compute first-visit returns, then average per \((s,a)\):
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">(s,a)</th><th>first-visit returns</th><th>Q = average</th></tr>
+    <tr><td class="l">(A,x)</td><td>19.6, 29.52</td><td class="hl">24.56</td></tr>
+    <tr><td class="l">(B,y)</td><td>28, 28</td><td class="hl">28.0</td></tr>
+    <tr><td class="l">(C,x)</td><td>0, 24.4, 24.4</td><td class="hl">16.27</td></tr>
+    <tr><td class="l">(C,y)</td><td>12</td><td>12.0</td></tr>
+  </table></div>
+  <div class="answer-final"><span class="lbl">Greedy policy</span> \(\pi(A){=}x,\;\pi(B){=}y,\;\pi(C){=}x\) → then made ε-greedy. Step-by-step return derivation on the <a href="s-jul2024-regular.html">Jul 2024-regular page</a>.</div>
+  </div></div>
+
+  <h2 id="offpolicy">8. Off-policy learning &amp; importance sampling</h2>
+  <p>Learn about a <strong>target</strong> policy \(\pi\) while behaving with a different <strong>behaviour</strong> policy \(b\) (which explores). Reweight returns by the <strong>importance-sampling ratio</strong>:</p>
+  <div class="mathblock">\[ \rho_{t:T-1}=\prod_{k=t}^{T-1}\frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)} \]</div>
+  <div class="callout info"><div class="cico">🔗</div><div class="cbody"><div class="ctitle">Ratio vs. model dynamics (Jul 2023 Q4b)</div>
+  Notice the environment’s transition probabilities \(p(s'\mid s,a)\) appear in both the numerator and denominator of the trajectory probability and <strong>cancel</strong>. So \(\rho\) depends only on the two <em>policies</em>, never on the model — which is exactly why off-policy MC is model-free.</div></div>
+  <div class="callout warn"><div class="cico">📏</div><div class="cbody"><div class="ctitle">Coverage requirement (Jul 2023 Q4d)</div>
+  <strong>Yes — coverage is mandatory.</strong> The behaviour policy \(b\) must give non-zero probability to every action the target \(\pi\) might take: if \(\pi(a\mid s)>0\) then \(b(a\mid s)>0\). Otherwise \(\rho\) divides by zero — you’d be trying to learn about actions you never sample. (\(b\) may, however, take actions \(\pi\) never would.)</div></div>
+
+  <h2 id="quiz">9. Check yourself</h2>
+  <div class="quiz">
+    <div class="qz-q">Q1. MC methods require…</div>
+    <div class="qz-opt" data-correct="0">a known model of the environment</div>
+    <div class="qz-opt" data-correct="1">complete episodes (terminating tasks)</div>
+    <div class="qz-opt" data-correct="0">bootstrapping from current estimates</div>
+    <div class="qz-opt" data-correct="0">a continuous action space</div>
+    <div class="qz-exp">MC averages full returns, so an episode must end before its return is known. It is model-free and does not bootstrap.</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q2. In model-free control we estimate \(q_\pi(s,a)\) rather than \(v_\pi(s)\) because…</div>
+    <div class="qz-opt" data-correct="1">choosing the best action from \(v\) would need the model</div>
+    <div class="qz-opt" data-correct="0">\(v\) cannot be estimated by MC</div>
+    <div class="qz-opt" data-correct="0">\(q\) needs no episodes</div>
+    <div class="qz-opt" data-correct="0">\(v\) ignores rewards</div>
+    <div class="qz-exp">\(\arg\max_a q(s,a)\) is model-free; doing the same from \(v\) requires \(p(s',r|s,a)\), which we don’t have.</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q3. An ε-greedy policy with 4 actions assigns the greedy action probability…</div>
+    <div class="qz-opt" data-correct="1">\(1-\varepsilon+\varepsilon/4\)</div>
+    <div class="qz-opt" data-correct="0">\(1-\varepsilon\)</div>
+    <div class="qz-opt" data-correct="0">\(\varepsilon/4\)</div>
+    <div class="qz-opt" data-correct="0">\(1\)</div>
+    <div class="qz-exp">Greedy gets \(1-\varepsilon\) plus its share \(\varepsilon/|\mathcal A|\) of the random branch; each non-greedy action gets \(\varepsilon/4\).</div>
+  </div>
+
+  <div class="pager">
+    <a href="t4-dynamic-programming.html"><div class="dir">← Prev</div><div class="ttl">④ Dynamic Programming</div></a>
+    <a class="next" href="s-dec2025.html"><div class="dir">Next →</div><div class="ttl">Solved: Dec 2025 Midsem</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

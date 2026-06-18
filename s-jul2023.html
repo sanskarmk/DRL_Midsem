@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solved · Jul 2023 Open Book · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="s-jul2023.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Solved Paper · 23 July 2023 · Open book</span>
+  <h1>Jul 2023 Regular — full solutions</h1>
+  <p class="lead">Zebra-crossing MDP &amp; Bellman, a Netflix bandit exploration analysis, a robot line-world solved with in-place DP, and multi-user Monte Carlo with importance sampling.</p>
+  <div class="callout warn"><div class="cico">⚠️</div><div class="cbody"><div class="ctitle">Two student-ID-dependent values</div>
+  Q2 initialises action values to <em>(last digit of your ID)/2</em>; Q3 uses <em>x = (last digit) + 5</em>. The worked answers below use the standard example <strong>last digit = 8</strong> (so Q-init = 4 in Q2), and keep <strong>x as a symbol</strong> in Q3 so you can substitute your own. The available “official” key only solved Q1–Q2 and contained arithmetic slips, which are corrected and flagged here.</div></div>
+  <button class="btn ghost no-print" onclick="revealAll()">Reveal all solutions</button>
+
+  <!-- Q1 -->
+  <div class="qcard"><div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 1 · Zebra-crossing traffic signal</span></div><div class="qbody">
+    <h4>(a) MDP formulation + design choices. <span class="small">[3.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <ul>
+        <li><strong>States:</strong> \(S=(T,P,V)\) — signal state \(T\in\{\text{Red},\text{Green}\}\), number of waiting pedestrians \(P\), waiting vehicles \(V\).</li>
+        <li><strong>Actions:</strong> {switch to Red, switch to Green, maintain}.</li>
+        <li><strong>Transitions:</strong> depend on action + arrival rates (pedestrians/vehicles accumulate or clear); estimated from traffic data.</li>
+        <li><strong>Reward:</strong> \(R=-(\alpha P+\beta V)\) — penalise total waiting; weights \(\alpha,\beta\) trade pedestrian vs vehicle delay.</li>
+        <li><strong>Discount:</strong> \(\gamma\approx0.9\) to value sustained low waiting, not just the next step.</li>
+      </ul>
+    </div>
+    <h4>(b) Bellman state-value equation + backup diagram. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ v_\pi(s)=\sum_a\pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\big[r+\gamma v_\pi(s')\big] \]</div>
+      <svg class="diagram" viewBox="0 0 420 170">
+        <circle cx="210" cy="28" r="11" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/><text x="228" y="32" class="lbl">s</text>
+        <line class="edge" x1="210" y1="39" x2="140" y2="78"/><line class="edge" x1="210" y1="39" x2="280" y2="78"/>
+        <text x="150" y="66" class="lbl">π(a|s)</text>
+        <circle cx="140" cy="86" r="6" fill="var(--text)"/><circle cx="280" cy="86" r="6" fill="var(--text)"/>
+        <line class="edge" x1="140" y1="92" x2="100" y2="135"/><line class="edge" x1="140" y1="92" x2="180" y2="135"/>
+        <line class="edge" x1="280" y1="92" x2="240" y2="135"/><line class="edge" x1="280" y1="92" x2="320" y2="135"/>
+        <text x="150" y="120" class="lbl">p, r</text>
+        <circle cx="100" cy="143" r="9" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+        <circle cx="180" cy="143" r="9" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+        <circle cx="240" cy="143" r="9" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+        <circle cx="320" cy="143" r="9" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+      </svg>
+    </div>
+    <h4>(c) Which solution approach is appropriate? <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>The full model is hard to specify exactly and the state space \((T,P,V)\) grows large with queue lengths, so tabular DP is impractical. A <strong>model-free / function-approximation</strong> approach (TD learning, or DQN for large state spaces) that learns from interaction is appropriate. If you discretise \(P,V\) coarsely and can estimate transitions, small-scale DP (value iteration) also works.</p></div>
+    <h4>(d) Multiply all rewards by 10. <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><div class="answer-final"><span class="lbl">Answer</span> Every value scales: \(v'(s)=10\,v(s)\). The <strong>optimal policy is unchanged</strong> — a positive scaling preserves the ordering of action values, and the policy depends only on which action is largest.</div></div>
+  </div></div>
+
+  <!-- Q2 -->
+  <div class="qcard"><div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 2 · Netflix bandit exploration</span></div><div class="qbody">
+    <p>Genres {a,b,c,d}, rewards ∈ {0..3}. Sequence: 1:(a,2) 2:(b,3) 3:(c,1) 4:(a,1) 5:(b,1) 6:(d,2) 7:(b,1) 8:(d,1) 9:(c,3) 10:(c,3) 11:(c,1) 12:(d,1). Initial Q = 4 (last-digit-8 example). A pick is <em>definitely exploratory</em> if the chosen genre was not a current arg-max.</p>
+
+    <h4>(a) Stationary case — sample averages. Which picks are exploratory? <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Untried genres keep the optimistic Q = 4, so they look best until first tried (d only at t6). Tracking sample-average Q <em>before</em> each pick:</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>t</th><th>pick</th><th>Q before (a,b,c,d)</th><th>greedy</th><th>verdict</th></tr>
+        <tr><td>1</td><td>a</td><td>4,4,4,4</td><td>tie</td><td class="hl-amber">possible</td></tr>
+        <tr><td>2</td><td>b</td><td>2,4,4,4</td><td>b,c,d</td><td>greedy-OK</td></tr>
+        <tr><td>3</td><td>c</td><td>2,3,4,4</td><td>c,d</td><td>greedy-OK</td></tr>
+        <tr><td>4</td><td>a</td><td>2,3,1,4</td><td>d</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>5</td><td>b</td><td>1.5,3,1,4</td><td>d</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>6</td><td>d</td><td>1.5,2,1,4</td><td>d</td><td>greedy</td></tr>
+        <tr><td>7</td><td>b</td><td>1.5,2,1,2</td><td>b,d</td><td>greedy-OK</td></tr>
+        <tr><td>8</td><td>d</td><td>1.5,1.67,1,2</td><td>d</td><td>greedy</td></tr>
+        <tr><td>9</td><td>c</td><td>1.5,1.67,1,1.5</td><td>b</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>10</td><td>c</td><td>1.5,1.67,2,1.5</td><td>c</td><td>greedy</td></tr>
+        <tr><td>11</td><td>c</td><td>1.5,1.67,2.33,1.5</td><td>c</td><td>greedy</td></tr>
+        <tr><td>12</td><td>d</td><td>1.5,1.67,2,1.5</td><td>c</td><td class="hl">DEFINITE</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Answer</span> Definitely exploratory: <strong>t = 4, 5, 9, 12</strong> (plus t = 1 where all values tie). Final Q: a=1.5, b=1.67, c=2.0, d=1.33 — greedy genre = <strong>c</strong>.</div>
+      <div class="callout pitfall"><div class="cico">🩹</div><div class="cbody"><div class="ctitle">Correction vs. the circulated key</div>
+      The “official” key listed {1,2,3,4,6,9,12}; that double-counts t6 (which is <em>greedy</em>, since untried d=4 is the max) and misses t5. The verified set is {4,5,9,12}.</div></div>
+    </div>
+
+    <h4>(b) Non-stationary case — weighted average, α = 0.5. <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Now \(Q\leftarrow Q+0.5(r-Q)\); estimates swing faster toward recent rewards.</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>t</th><th>pick</th><th>Q before (a,b,c,d)</th><th>greedy</th><th>verdict</th></tr>
+        <tr><td>4</td><td>a</td><td>3,3.5,2.5,4</td><td>d</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>5</td><td>b</td><td>2,3.5,2.5,4</td><td>d</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>7</td><td>b</td><td>2,2.25,2.5,3</td><td>d</td><td class="hl">DEFINITE</td></tr>
+      </table></div>
+      <p class="small">(t1–3 tie/greedy-OK; t6 picks the greedy d; t8–12 each pick the current max.)</p>
+      <div class="answer-final"><span class="lbl">Answer</span> Definitely exploratory: <strong>t = 4, 5, 7</strong> (plus t = 1 ties). Final Q: a=2.0, b=1.625, c=1.94, d=1.5.</div>
+    </div>
+
+    <h4>(c) Compare (a) and (b). <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>Both flag t4, t5. They diverge afterward: with <strong>sample averages</strong> estimates are smooth (equal weight), so c stays below b until late ⇒ extra exploratory picks at t9, t12. With <strong>constant α</strong>, recent rewards dominate, so b collapses quickly (to 1.625 by t7) ⇒ the exploratory pick shifts to t7. The constant-α estimates are more volatile, changing which picks look non-greedy.</p></div>
+
+    <h4>(d) Initialise all action values to 5. <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p><strong>Optimistic initialisation.</strong> Every genre now starts above any possible reward (max 3), so each first looks great and the agent is driven to try them all early — extra exploration up front even with the same ε. As samples arrive the inflated values decay toward the true means; afterward behaviour is the same. So early exploratory moves <em>increase</em>; the effect is temporary.</p></div>
+
+    <h4>(e) Extend to n individuals with different tastes. <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>Keep a <strong>separate bandit per user</strong>, or use a <strong>contextual bandit</strong> where the user’s identity/features are the context and \(Q(\text{context},a)\) is learned. Share learning across similar users and use optimistic initial values to handle cold-start.</p></div>
+  </div></div>
+
+  <!-- Q3 -->
+  <div class="qcard"><div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 3 · Robot line-world (positions 0–5)</span></div><div class="qbody">
+    <p>States 0–5; 0 and 5 terminal. Left ⇦ → s−1, Right ⇒ → s+1. Entering 5 gives +x, entering 0 gives −x, else 0. \(x=\text{(last ID digit)}+5\). γ = 0.5, <strong>in-place</strong> DP, sweep order 1→4.</p>
+
+    <h4>(a) Evaluate policy [⇦ ⇦ ⇦ ⇒], then improve (one iteration). <span class="small">[3]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p><strong>Evaluation</strong> (V init 0; in-place uses freshly-updated neighbours):</p>
+      <ol class="steps">
+        <li>\(V(1)\): π=⇦ → state 0, r=−x. \(V(1)=-x+0.5\,V(0)=-x\).</li>
+        <li>\(V(2)\): π=⇦ → state 1, r=0. \(V(2)=0+0.5\,V(1)=0.5(-x)=-x/2\).</li>
+        <li>\(V(3)\): π=⇦ → state 2, r=0. \(V(3)=0+0.5\,V(2)=-x/4\).</li>
+        <li>\(V(4)\): π=⇒ → state 5, r=+x. \(V(4)=x+0.5\,V(5)=x\).</li>
+      </ol>
+      <p>So \(V=(V_1,V_2,V_3,V_4)=(-x,\,-x/2,\,-x/4,\,x)\).</p>
+      <p><strong>Improvement</strong> (greedy w.r.t. these V, for \(x&gt;0\)):</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>state</th><th>⇦ value</th><th>⇒ value</th><th>greedy</th></tr>
+        <tr><td>1</td><td>−x</td><td>0.5·V(2) = −x/4</td><td class="hl">⇒</td></tr>
+        <tr><td>2</td><td>0.5·V(1) = −x/2</td><td>0.5·V(3) = −x/8</td><td class="hl">⇒</td></tr>
+        <tr><td>3</td><td>0.5·V(2) = −x/4</td><td>0.5·V(4) = x/2</td><td class="hl">⇒</td></tr>
+        <tr><td>4</td><td>0.5·V(3) = −x/8</td><td>x</td><td class="hl">⇒</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Improved policy</span> [⇒ ⇒ ⇒ ⇒] — head right toward the +x terminal from every state. (Intuition: the +x goal is at the right; left only risks the −x pit.)</div>
+    </div>
+
+    <h4>(b) Two iterations of value iteration. <span class="small">[3]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>\(V(s)\leftarrow\max(\,⇦:\,r+0.5V(s-1),\;\;⇒:\,r+0.5V(s+1)\,)\), in-place order 1→4, V init 0.</p>
+      <p><strong>Iteration 1:</strong></p>
+      <ol class="steps">
+        <li>\(V(1)=\max(-x+0,\;0+0.5\cdot0)=\max(-x,0)=0\)</li>
+        <li>\(V(2)=\max(0.5\cdot0,\;0.5\cdot0)=0\)</li>
+        <li>\(V(3)=\max(0.5\cdot0,\;0.5\cdot0)=0\)</li>
+        <li>\(V(4)=\max(0.5\cdot0,\;x+0)=x\)</li>
+      </ol>
+      <p>After iter 1: \(V=(0,0,0,x)\).</p>
+      <p><strong>Iteration 2:</strong></p>
+      <ol class="steps">
+        <li>\(V(1)=\max(-x,\;0.5\,V(2)=0)=0\)</li>
+        <li>\(V(2)=\max(0.5\,V(1)=0,\;0.5\,V(3)=0)=0\)</li>
+        <li>\(V(3)=\max(0.5\,V(2)=0,\;0.5\,V(4)=x/2)=x/2\)</li>
+        <li>\(V(4)=\max(0.5\,V(3)=x/4,\;x)=x\)</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">After 2 iterations</span> \(V=(0,\,0,\,x/2,\,x)\). The +x signal propagates one state left per sweep — value iteration needs several sweeps for it to reach state 1.</div>
+    </div>
+
+    <h4>(c) Applicability to large state/action spaces. <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p>Both algorithms sweep <em>every</em> state each iteration and need the full model, so cost scales with \(|\mathcal S|\times|\mathcal A|\) and they become intractable for large/continuous spaces (curse of dimensionality). Policy iteration may need fewer iterations but each evaluation is itself expensive; value iteration is cheaper per sweep but may need many sweeps. For large problems, switch to sampling + function approximation (TD, DQN).</p></div>
+  </div></div>
+
+  <!-- Q4 -->
+  <div class="qcard"><div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 4 · Multi-user Monte Carlo</span></div><div class="qbody">
+    <p>Individuals {p,q,r}, genres {a,b,c}. Episodes (individual, genre, reward), target policy π(p)=a, π(q)=a, π(r)=c:</p>
+    <pre><code>E1: p,a,0  q,c,2  p,b,0  q,c,3  r,c,2  r,b,2  q,c,1
+E2: q,b,3  r,a,2  q,c,1  p,a,0  q,a,2  p,c,2  r,b,1
+E3: r,a,2  p,b,1  p,a,2  q,c,3  q,b,3  r,a,3  q,c,0</code></pre>
+
+    <h4>(a) First-visit &amp; every-visit prediction; which converges faster? <span class="small">[3]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="callout warn"><div class="cico">📝</div><div class="cbody">Interpretation (the question is loosely worded): treat each individual as a state, γ = 1, and the return at a visit = sum of that episode’s rewards from that point onward.</div></div>
+      <p>First-visit (first time the individual appears in each episode):</p>
+      <ul>
+        <li>p: E1 = 0+2+0+3+2+2+1 = 9; E2 (first p at pos4) = 0+2+2+1 = 5; E3 (first p at pos2) = 1+2+3+3+3+0 = 12 → mean = (9+5+12)/3 = <strong>9.0</strong></li>
+        <li>q: E1 (pos2) = 2+0+3+2+2+1 = 10; E2 (pos1) = 3+2+1+0+2+2+1 = 11; E3 (pos4) = 3+3+3+0 = 9 → mean = (10+11+9)/3 = <strong>10.0</strong></li>
+        <li>r: E1 (pos5) = 2+2+1 = 5; E2 (pos2) = 2+1+0+2+2+1 = 8; E3 (pos1) = 2+1+2+3+3+3+0 = 14 → mean = (5+8+14)/3 = <strong>9.0</strong></li>
+      </ul>
+      <p>Every-visit (all appearances) gives V(p) ≈ <strong>8.17</strong>, V(q) ≈ <strong>6.22</strong>, V(r) ≈ <strong>5.67</strong>.</p>
+      <div class="answer-final"><span class="lbl">Which converges faster?</span> Every-visit extracts more returns per episode, so with limited data it produces estimates sooner; first-visit returns are independent ⇒ unbiased and cleaner. Both converge to \(v_\pi\) as episodes → ∞.</div>
+    </div>
+
+    <h4>(b) Importance-sampling ratio for E2; relation to model dynamics. <span class="small">[2]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>With a uniform behaviour policy \(b(\cdot\mid s)=1/3\) and the deterministic target π, the ratio is</p>
+      <div class="mathblock">\[ \rho_{E2}=\prod_k\frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)} \]</div>
+      <p>E2 begins with (q, b), but \(\pi(b\mid q)=0\) (target wants a). One zero factor ⇒</p>
+      <div class="answer-final"><span class="lbl">ρ(E2) = 0</span> E2 contains actions the target policy would never take, so under ordinary importance sampling it contributes nothing to the estimate of \(v_\pi\).</div>
+      <p><strong>Relation to model dynamics:</strong> the trajectory probability under each policy contains the same environment factors \(p(S_{k+1}\mid S_k,A_k)\); they appear in both numerator and denominator and <strong>cancel</strong>. Hence \(\rho\) depends only on the policies, not the (possibly unknown) model — which is what makes off-policy MC model-free.</p>
+    </div>
+
+    <h4>(c) Two approaches that keep MC exploring. <span class="small">[1.5]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><p><strong>Exploring starts</strong> (random initial (s,a)) and <strong>on-policy ε-soft policies</strong> (every action keeps probability ≥ ε/|𝒜|). Off-policy learning via a soft behaviour policy is a third.</p></div>
+
+    <h4>(d) Must off-policy methods have non-zero probabilities for all actions? <span class="small">[1]</span></h4>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution"><div class="answer-final"><span class="lbl">Coverage assumption — yes</span> The <em>behaviour</em> policy must satisfy \(b(a\mid s)&gt;0\) wherever \(\pi(a\mid s)&gt;0\) (else the IS ratio divides by zero and those actions are never sampled). The target policy itself may be deterministic; \(b\) just has to cover everything π might do.</div></div>
+  </div></div>
+
+  <div class="pager">
+    <a href="s-jan2024.html"><div class="dir">← Prev paper</div><div class="ttl">Jan 2024</div></a>
+    <a class="next" href="s-jul2024-regular.html"><div class="dir">Next paper →</div><div class="ttl">Jul 2024 Regular</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

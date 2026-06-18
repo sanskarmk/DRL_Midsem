@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧮 Interactive Tools · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="tools.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Practice · Interactive</span>
+  <h1>Interactive Tools</h1>
+  <p class="lead">Plug in your own numbers and watch the algorithms run, step by step. Great for checking your hand-working on practice questions.</p>
+
+  <div class="toc"><h4>Tools</h4><ul>
+    <li><a href="#ret">Discounted-return calculator</a></li>
+    <li><a href="#bandit">Bandit Q-value tracker</a></li>
+    <li><a href="#explore">ε-greedy exploration analyzer</a></li>
+    <li><a href="#vi">Value-iteration replayer</a></li>
+  </ul></div>
+
+  <!-- TOOL 1 -->
+  <h2 id="ret">1. Discounted-return calculator</h2>
+  <p>Enter a reward sequence \(R_1,R_2,\dots\) and a discount \(\gamma\). Computes \(G_t=\sum_k\gamma^k R_{t+k+1}\) for every starting step.</p>
+  <div class="tool">
+    <div class="row">
+      <div><label>Rewards (comma-separated, R₁ first)</label><input id="ret-r" type="text" value="1, 2, 6, 3, 2"></div>
+      <div style="max-width:120px;flex:0 0 120px"><label>γ</label><input id="ret-g" type="number" step="0.05" value="0.8"></div>
+    </div>
+    <button class="btn" onclick="calcReturns()">Compute returns</button>
+    <div class="out" id="ret-out"></div>
+  </div>
+
+  <!-- TOOL 2 -->
+  <h2 id="bandit">2. Bandit Q-value tracker (single arm)</h2>
+  <p>Enter the rewards observed for one arm. Choose sample-average (\(1/n\)) or constant step-size \(\alpha\). Shows the running estimate after each pull.</p>
+  <div class="tool">
+    <div class="row">
+      <div><label>Rewards for this arm (comma-separated)</label><input id="b-r" type="text" value="7, 8"></div>
+      <div style="max-width:130px;flex:0 0 130px"><label>Initial Q</label><input id="b-init" type="number" step="0.5" value="0"></div>
+    </div>
+    <div class="row">
+      <div style="max-width:200px;flex:0 0 200px"><label>Update rule</label>
+        <select id="b-mode"><option value="alpha">constant α</option><option value="avg">sample average 1/n</option></select></div>
+      <div style="max-width:130px;flex:0 0 130px"><label>α (if constant)</label><input id="b-a" type="number" step="0.05" value="0.5"></div>
+    </div>
+    <button class="btn" onclick="calcBandit()">Track Q</button>
+    <div class="out" id="b-out"></div>
+  </div>
+
+  <!-- TOOL 3 -->
+  <h2 id="explore">3. ε-greedy exploration analyzer</h2>
+  <p>Enter a sequence of <code>arm:reward</code> pairs. Untried arms keep the initial Q (set it high for optimistic init). The tool tracks each arm’s estimate and flags every pick as <span style="color:var(--accent);font-weight:700">DEFINITE</span> exploration (a non-greedy arm was chosen) or <span style="color:var(--amber);font-weight:700">possible</span> (a greedy/tied arm — could be exploit or a lucky random pick).</p>
+  <div class="tool">
+    <div class="row">
+      <div><label>Sequence (arm:reward, comma-separated)</label><input id="e-seq" type="text" value="S:7, T:5, R:6, C:4, S:8, T:6, R:7, C:5"></div>
+    </div>
+    <div class="row">
+      <div style="max-width:130px;flex:0 0 130px"><label>Initial Q</label><input id="e-init" type="number" step="0.5" value="0"></div>
+      <div style="max-width:200px;flex:0 0 200px"><label>Update rule</label>
+        <select id="e-mode"><option value="alpha">constant α</option><option value="avg">sample average 1/n</option></select></div>
+      <div style="max-width:130px;flex:0 0 130px"><label>α (if constant)</label><input id="e-a" type="number" step="0.05" value="0.5"></div>
+    </div>
+    <button class="btn" onclick="calcExplore()">Analyze</button>
+    <div class="out" id="e-out"></div>
+  </div>
+
+  <!-- TOOL 4 -->
+  <h2 id="vi">4. Value-iteration replayer</h2>
+  <p>Two MDPs straight from your papers. Pick γ and the number of synchronous iterations; watch the state values evolve.</p>
+  <div class="tool">
+    <div class="row">
+      <div style="max-width:260px;flex:0 0 260px"><label>MDP</label>
+        <select id="vi-mdp">
+          <option value="wrist">Dec 2025 · wristband (3 states)</option>
+          <option value="game">Jul 2024-mk · 4-box game</option>
+        </select></div>
+      <div style="max-width:110px;flex:0 0 110px"><label>γ</label><input id="vi-g" type="number" step="0.05" value="0.1"></div>
+      <div style="max-width:130px;flex:0 0 130px"><label>iterations</label><input id="vi-n" type="number" step="1" value="1"></div>
+    </div>
+    <button class="btn" onclick="calcVI()">Run value iteration</button>
+    <div class="out" id="vi-out"></div>
+    <p class="small">The wristband run uses synchronous updates; the game run uses in-place order D, A, C, B (as the paper specifies) and fixes Goal = 100.</p>
+  </div>
+
+  <div class="pager">
+    <a href="s-jul2024-makeup.html"><div class="dir">← Back</div><div class="ttl">Jul 2024 Makeup</div></a>
+    <a class="next" href="cheatsheet.html"><div class="dir">Next →</div><div class="ttl">📋 Cheat-Sheet</div></a>
+  </div>
+
+  </div></main>
+</div>
+
+<script>
+function num(x){return Math.round(x*10000)/10000;}
+function parseList(s){return s.split(',').map(t=>parseFloat(t.trim())).filter(v=>!isNaN(v));}
+
+/* 1. returns */
+function calcReturns(){
+  const R=parseList(document.getElementById('ret-r').value);
+  const g=parseFloat(document.getElementById('ret-g').value);
+  if(!R.length){document.getElementById('ret-out').textContent='Enter some rewards.';return;}
+  let lines=[]; const n=R.length;
+  // G_t for t=0..n-1 (G_t uses R_{t+1}.. = R[t]..)
+  let G=new Array(n).fill(0); let acc=0;
+  for(let t=n-1;t>=0;t--){acc=R[t]+g*acc; G[t]=acc;}
+  lines.push('γ = '+g+'   rewards = ['+R.join(', ')+']\n');
+  for(let t=0;t<n;t++){
+    let terms=[]; for(let k=0;k<n-t;k++){terms.push((k? 'γ'+(k>1?'^'+k:'')+'·':'')+R[t+k]);}
+    lines.push('G'+t+' = '+terms.join(' + ')+'  =  '+num(G[t]));
+  }
+  document.getElementById('ret-out').innerHTML=lines.join('\n').replace(/(G0 =[^\n]*)/,'<b>$1</b>');
+}
+
+/* 2. bandit single arm */
+function calcBandit(){
+  const R=parseList(document.getElementById('b-r').value);
+  const init=parseFloat(document.getElementById('b-init').value)||0;
+  const mode=document.getElementById('b-mode').value;
+  const a=parseFloat(document.getElementById('b-a').value);
+  let Q=init,n=0,out=['start Q = '+init];
+  R.forEach((r,i)=>{
+    n++; let step = (mode==='avg')? (1/n) : a;
+    let newQ = (mode==='avg' && n===1)? r : Q+step*(r-Q);
+    out.push('pull '+(i+1)+': r='+r+'  →  Q = '+num(Q)+' + '+num(step)+'·('+r+'−'+num(Q)+') = <b>'+num(newQ)+'</b>');
+    Q=newQ;
+  });
+  out.push('\nfinal Q = '+num(Q));
+  document.getElementById('b-out').innerHTML=out.join('\n');
+}
+
+/* 3. exploration analyzer */
+function calcExplore(){
+  const raw=document.getElementById('e-seq').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const init=parseFloat(document.getElementById('e-init').value)||0;
+  const mode=document.getElementById('e-mode').value;
+  const a=parseFloat(document.getElementById('e-a').value);
+  let Q={},N={},seq=[];
+  raw.forEach(p=>{const [arm,rw]=p.split(':');seq.push([arm.trim(),parseFloat(rw)]);});
+  // init all arms seen
+  seq.forEach(([arm])=>{if(!(arm in Q)){Q[arm]=init;N[arm]=0;}});
+  const arms=Object.keys(Q);
+  let out=['arms: '+arms.join(', ')+'   initial Q = '+init+'\n'];
+  let def=[],pos=[];
+  seq.forEach(([arm,r],i)=>{
+    // greedy set
+    let mx=Math.max(...arms.map(k=>Q[k]));
+    let greedy=arms.filter(k=>Math.abs(Q[k]-mx)<1e-9);
+    let verdict;
+    if(greedy.length===arms.length){verdict='possible (all tied)';pos.push(i+1);}
+    else if(greedy.includes(arm)){verdict='possible (greedy/tied)';pos.push(i+1);}
+    else{verdict='DEFINITE explore';def.push(i+1);}
+    let qstr=arms.map(k=>k+':'+num(Q[k])).join(', ');
+    out.push('t'+(i+1)+'  pick '+arm+' (r='+r+') | Q before ['+qstr+'] | greedy {'+greedy.join(',')+'} → '+verdict);
+    // update
+    N[arm]++; let step=(mode==='avg')?(1/N[arm]):a;
+    Q[arm]=(mode==='avg'&&N[arm]===1)? r : Q[arm]+step*(r-Q[arm]);
+  });
+  out.push('\nDEFINITELY exploratory: '+(def.length?('t='+def.join(', ')):'none'));
+  out.push('Possibly exploratory: '+(pos.length?('t='+pos.join(', ')):'none'));
+  out.push('final Q: '+arms.map(k=>k+'='+num(Q[k])).join(', '));
+  document.getElementById('e-out').innerHTML=out.join('\n')
+    .replace(/DEFINITE explore/g,'<b style="color:var(--accent)">DEFINITE explore</b>')
+    .replace(/(DEFINITELY exploratory:[^\n]*)/,'<b>$1</b>');
+}
+
+/* 4. value iteration */
+const MDP={
+  wrist:{
+    states:['resting','moderate','high'],
+    sync:true,
+    init:{resting:0,moderate:0,high:0},
+    A:{ // state: action: [[p,r,next],...]
+      resting:{ModeA:[[1,1,'resting']], ModeB:[[0.6,1,'resting'],[0.4,2,'moderate']]},
+      moderate:{ModeA:[[0.6,1,'moderate'],[0.4,2,'resting']], ModeB:[[0.4,1,'moderate'],[0.6,2,'high']]},
+      high:{ModeA:[[0.5,1,'high'],[0.5,1,'moderate']], ModeB:[[1,1,'high']]}
+    }
+  },
+  game:{
+    states:['D','A','C','B'], order:['D','A','C','B'], sync:false,
+    init:{A:0,B:0,C:0,D:0,Goal:100},
+    A:{ // deterministic edges as actions
+      A:{toD:[[1,13,'D']], toB:[[1,-10,'B']]},
+      B:{toA:[[1,50,'A']], toC:[[1,30,'C']]},
+      C:{toD:[[1,43,'D']], toB:[[1,-15,'B']]},
+      D:{toA:[[1,22,'A']], toC:[[1,16,'C']], toGoal:[[1,40,'Goal']]}
+    }
+  }
+};
+function calcVI(){
+  const key=document.getElementById('vi-mdp').value;
+  const g=parseFloat(document.getElementById('vi-g').value);
+  const iters=Math.max(1,parseInt(document.getElementById('vi-n').value)||1);
+  const m=MDP[key];
+  let V=Object.assign({},m.init);
+  let out=['MDP: '+key+'   γ='+g+'   '+(m.sync?'synchronous':'in-place ('+m.order.join(',')+')')+'\n'];
+  const order = m.order || m.states;
+  for(let it=1;it<=iters;it++){
+    let Vnew = m.sync? Object.assign({},V) : V; // in-place mutates V
+    let src = m.sync? V : V;
+    let lines=[];
+    order.forEach(s=>{
+      let best=-1e9,bestA=null,qs=[];
+      for(const act in m.A[s]){
+        let q=0; m.A[s][act].forEach(([p,r,ns])=>{ q+= p*(r+g*(m.sync?src[ns]:V[ns])); });
+        qs.push(act+'='+num(q));
+        if(q>best){best=q;bestA=act;}
+      }
+      if(m.sync) Vnew[s]=best; else V[s]=best;
+      lines.push('  '+s+': '+qs.join(', ')+'  → V='+num(best)+' ('+bestA+')');
+    });
+    if(m.sync) V=Vnew;
+    out.push('Iteration '+it+':'); out=out.concat(lines);
+  }
+  out.push('\nFinal V: '+order.map(s=>s+'='+num(V[s])).join(', '));
+  document.getElementById('vi-out').innerHTML=out.join('\n');
+}
+</script>
+</body>
+</html>

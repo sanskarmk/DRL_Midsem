@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📋 Cheat-Sheet · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="cheatsheet.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Revision</span>
+  <h1>Midsem Cheat-Sheet</h1>
+  <p class="lead">Every formula and rule on one page. <button class="btn no-print" onclick="window.print()">🖨️ Print this page</button></p>
+
+  <h2>Returns &amp; values</h2>
+  <div class="callout formula"><div class="cico">∑</div><div class="cbody">
+    <div class="mathblock">\[ G_t=\sum_{k=0}^{\infty}\gamma^k R_{t+k+1}=R_{t+1}+\gamma G_{t+1} \]</div>
+    <div class="mathblock">\[ v_\pi(s)=\mathbb E_\pi[G_t\mid S_t{=}s],\quad q_\pi(s,a)=\mathbb E_\pi[G_t\mid S_t{=}s,A_t{=}a] \]</div>
+    <div class="mathblock">\[ v_\pi(s)=\sum_a\pi(a|s)\,q_\pi(s,a) \]</div>
+    γ→0 myopic · γ→1 far-sighted. Episodic: γ=1 OK. Continuing: need γ&lt;1.
+  </div></div>
+
+  <h2>Bellman equations</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">Expectation (given π)</th><th class="l">Optimality (best)</th></tr>
+    <tr><td class="l">\(v_\pi(s)=\sum_a\pi(a|s)\sum_{s',r}p[r+\gamma v_\pi(s')]\)</td><td class="l">\(v_*(s)=\max_a\sum_{s',r}p[r+\gamma v_*(s')]\)</td></tr>
+    <tr><td class="l">\(q_\pi(s,a)=\sum p[r+\gamma\sum_{a'}\pi q_\pi(s',a')]\)</td><td class="l">\(q_*(s,a)=\sum p[r+\gamma\max_{a'}q_*(s',a')]\)</td></tr>
+  </table></div>
+  <p>Optimal policy: \(\pi_*(s)=\arg\max_a q_*(s,a)\). &nbsp; Scaling all rewards by \(c&gt;0\): \(v\to cv\), policy unchanged. &nbsp; Adding a constant (episodic): policy unchanged; (continuing): may change.</p>
+
+  <h2>Multi-armed bandits</h2>
+  <div class="callout formula"><div class="cico">🎰</div><div class="cbody">
+    <div class="mathblock">\[ Q_{n+1}=Q_n+\tfrac1n[R_n-Q_n]\ \text{(stationary)};\quad Q_{n+1}=Q_n+\alpha[R_n-Q_n]\ \text{(non-stationary)} \]</div>
+    Constant α = exponential recency-weighted avg \((1-\alpha)^nQ_1+\sum\alpha(1-\alpha)^{n-i}R_i\). α=1 ⇒ Q=last reward.<br>
+    <strong>ε-greedy:</strong> exploit w.p. 1−ε, random w.p. ε. &nbsp; <strong>UCB:</strong> \(A_t=\arg\max_a[Q_t(a)+c\sqrt{\ln t/N_t(a)}]\).<br>
+    <strong>Optimistic init:</strong> high \(Q_1\) ⇒ early exploration (stationary only).<br>
+    <strong>Exploratory pick?</strong> chosen arm ≠ current arg-max ⇒ <em>definite</em>; chosen arm = (tied) max ⇒ <em>possible</em>.
+  </div></div>
+
+  <h2>MAB vs MDP</h2>
+  <p>Bandit = 1 state, action affects only immediate reward. MDP = action affects next state ⇒ must optimise long-run return. (Wristband Case 1 = bandit; Case 2 with battery-temp feedback = MDP.)</p>
+
+  <h2>Dynamic programming (needs model)</h2>
+  <div class="callout formula"><div class="cico">🔁</div><div class="cbody">
+    <strong>Policy evaluation:</strong> \(V(s)\leftarrow\sum_a\pi\sum p[r+\gamma V(s')]\) until stable.<br>
+    <strong>Policy improvement:</strong> \(\pi'(s)=\arg\max_a\sum p[r+\gamma V(s')]\).<br>
+    <strong>Policy iteration:</strong> alternate eval ↔ improve until π stable (GPI).<br>
+    <strong>Value iteration:</strong> \(V(s)\leftarrow\max_a\sum p[r+\gamma V(s')]\), then read off greedy π.<br>
+    <strong>Synchronous</strong>: new values from old table. <strong>In-place</strong>: overwrite immediately — order matters, faster propagation.<br>
+    Appropriate when: Markov + known model + small/finite state space.
+  </div></div>
+
+  <h2>Temporal difference</h2>
+  <div class="mathblock">\[ V(S_t)\leftarrow V(S_t)+\alpha\big[R_{t+1}+\gamma V(S_{t+1})-V(S_t)\big] \]</div>
+  <p>α = learning rate (not exploration!). Bracket = TD error. Updates online, every step, model-free, bootstraps.</p>
+
+  <h2>Monte Carlo (model-free, needs full episodes)</h2>
+  <div class="callout formula"><div class="cico">🎲</div><div class="cbody">
+    \(V(s)\) = average return after visits to \(s\). <strong>First-visit</strong>: first occurrence per episode (unbiased). <strong>Every-visit</strong>: all occurrences (more data, biased, both converge).<br>
+    <strong>Control needs \(q\), not \(v\)</strong> (choosing from \(v\) needs the model).<br>
+    <strong>Keep exploring:</strong> exploring starts · ε-soft policies · off-policy.<br>
+    <strong>ε-soft</strong>: every action \(\ge\varepsilon/|\mathcal A|\). <strong>ε-greedy</strong> (special case): greedy \(=1-\varepsilon+\varepsilon/|\mathcal A|\), others \(\varepsilon/|\mathcal A|\).<br>
+    <strong>Deterministic-policy MC fails</strong>: untried actions never updated ⇒ use ε-soft.
+  </div></div>
+
+  <h2>Off-policy &amp; importance sampling</h2>
+  <div class="mathblock">\[ \rho_{t:T-1}=\prod_{k=t}^{T-1}\frac{\pi(A_k|S_k)}{b(A_k|S_k)} \]</div>
+  <p>Model dynamics cancel (numerator = denominator) ⇒ ρ depends only on policies. <strong>Coverage:</strong> need \(b(a|s)&gt;0\) wherever \(\pi(a|s)&gt;0\). If the episode contains an action π never takes, ρ = 0.</p>
+
+  <h2>Verified answers to the numerical questions</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">Paper · Q</th><th class="l">Answer</th></tr>
+    <tr><td class="l">Dec 2025 Q1c (VI)</td><td class="l">V(rest,mod,high) = 1.4, 1.6, 1.0</td></tr>
+    <tr><td class="l">Dec 2025 Q3a (bandit)</td><td class="l">Q(S,R,T,C)=5.75, 5.0, 4.25, 3.5 → best S</td></tr>
+    <tr><td class="l">Dec 2025 Q3d</td><td class="l">definite t=2,3,4; possible t=1,5</td></tr>
+    <tr><td class="l">Dec 2025 Q5 (MC)</td><td class="l">returns 3.408/1.76/2.2; s₁ greedy a₃→a₂</td></tr>
+    <tr><td class="l">Jan 2024 Q1c (TD)</td><td class="l">V = 2.637</td></tr>
+    <tr><td class="l">Jan 2024 Q3b</td><td class="l">G₀=8.7952, G₁=9.744; cont. G₀=2,G₁=0</td></tr>
+    <tr><td class="l">Jan 2024 Q5 (MC)</td><td class="l">FV: A=10.67,B=7.25 · EV: A=9.17,B=3.55</td></tr>
+    <tr><td class="l">Jul 2023 Q2 (sample)</td><td class="l">definite t=4,5,9,12; Q→a1.5,b1.67,c2,d1.33</td></tr>
+    <tr><td class="l">Jul 2023 Q2 (α=.5)</td><td class="l">definite t=4,5,7; Q→a2,b1.625,c1.94,d1.5</td></tr>
+    <tr><td class="l">Jul 2023 Q3 (robot)</td><td class="l">eval V=(−x,−x/2,−x/4,x)→ improve all ⇒; VI 2 iters → (0,0,x/2,x)</td></tr>
+    <tr><td class="l">Jul 2023 Q4 (MC)</td><td class="l">FV: p=9,q=10,r=9; ρ(E2)=0</td></tr>
+    <tr><td class="l">Jul 2024-reg Q5 (MC)</td><td class="l">Q(A,x)=24.56,(B,y)=28,(C,x)=16.27; π=x,y,x</td></tr>
+    <tr><td class="l">Jul 2024-mk Q2 (VI)</td><td class="l">V(D,A,C,B)=130,130,160,174; π(B)=C</td></tr>
+    <tr><td class="l">Jul 2024-mk Q3b</td><td class="l">definite t=4; possible t=1,2,3,5,6</td></tr>
+    <tr><td class="l">Jul 2024-mk Q4c</td><td class="l">γ=0.7 → right; γ=0.5 → tie (both optimal)</td></tr>
+    <tr><td class="l">Jul 2024-mk Q5 (MC)</td><td class="l">Q(A,x)=39.75,(B,y)=33,(C,x)=32.86; π=x,y,x</td></tr>
+  </table></div>
+
+  <div class="pager">
+    <a href="tools.html"><div class="dir">← Back</div><div class="ttl">🧮 Tools</div></a>
+    <a class="next" href="index.html"><div class="dir">Home →</div><div class="ttl">🏠 Dashboard</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DRL Exam Prep · Deep Reinforcement Learning Midsem</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="index.html">
+<button class="theme-btn" title="Toggle theme">🌙</button>
+<button class="menu-btn" title="Menu">☰</button>
+<div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+    <span class="eyebrow">AIMLCZG512 · BITS Pilani WILP</span>
+    <h1>Deep Reinforcement Learning — Midsem, fully explained</h1>
+    <p class="lead">Every topic on your papers, broken into <strong>theory → intuition → numericals</strong>, plus a worked, step-by-step solution to <strong>every single question</strong> across all 6 papers. Built so the concepts actually click.</p>
+
+    <div class="callout intuition">
+      <div class="cico">🎯</div>
+      <div class="cbody">
+        <div class="ctitle">How to use this site</div>
+        Start with the five <strong>Topic</strong> pages (left) to build understanding. Then test yourself on the <strong>Solved Papers</strong> — each question hides its answer behind a “Show solution” button so you can attempt it first. Use the <strong>Interactive Tools</strong> to replay value iteration / bandit updates with your own numbers, and the <strong>Cheat-Sheet</strong> the night before.
+      </div>
+    </div>
+
+    <h2>The 5 topics on your exam</h2>
+    <div class="grid c2">
+      <a class="card" href="t1-rl-fundamentals.html">
+        <div class="k">Topic ①</div><h3>RL Fundamentals</h3>
+        <p>Agent–environment loop, reward vs. value, RL vs. supervised/unsupervised, model-based vs. model-free, the 4 elements.</p>
+        <div class="badgerow"><span class="badge">Returns</span><span class="badge">Discounting</span><span class="badge">TD rule</span></div>
+        <span class="pill">Learn →</span>
+      </a>
+      <a class="card" href="t2-bandits.html">
+        <div class="k">Topic ②</div><h3>Multi-Armed Bandits</h3>
+        <p>ε-greedy, sample averages vs. constant-α, UCB, optimistic initial values, stationary vs. non-stationary, exploration analysis.</p>
+        <div class="badgerow"><span class="badge">Q-updates</span><span class="badge">UCB</span><span class="badge">Exploration</span></div>
+        <span class="pill">Learn →</span>
+      </a>
+      <a class="card" href="t3-mdps.html">
+        <div class="k">Topic ③</div><h3>Markov Decision Processes</h3>
+        <p>States/actions/rewards/transitions, episodic vs. continuing, Bellman equations, backup diagrams, optimal value & policy.</p>
+        <div class="badgerow"><span class="badge">Bellman</span><span class="badge">MDP formulation</span><span class="badge">γ effects</span></div>
+        <span class="pill">Learn →</span>
+      </a>
+      <a class="card" href="t4-dynamic-programming.html">
+        <div class="k">Topic ④</div><h3>Dynamic Programming</h3>
+        <p>Policy evaluation & improvement, policy iteration, value iteration (sync & in-place), generalised policy iteration.</p>
+        <div class="badgerow"><span class="badge">Policy Iteration</span><span class="badge">Value Iteration</span></div>
+        <span class="pill">Learn →</span>
+      </a>
+      <a class="card" href="t5-monte-carlo.html">
+        <div class="k">Topic ⑤</div><h3>Monte Carlo Methods</h3>
+        <p>First-visit vs. every-visit prediction, MC control, ε-soft & exploring starts, off-policy & importance sampling.</p>
+        <div class="badgerow"><span class="badge">First/Every visit</span><span class="badge">ε-soft control</span><span class="badge">Importance sampling</span></div>
+        <span class="pill">Learn →</span>
+      </a>
+      <a class="card" href="tools.html">
+        <div class="k">Practice</div><h3>🧮 Interactive Tools</h3>
+        <p>Value-iteration stepper, bandit Q-value updater, return/discount calculator and an MC-return explorer — plug in any numbers.</p>
+        <div class="badgerow"><span class="badge">Live</span><span class="badge">Step-by-step</span></div>
+        <span class="pill">Open →</span>
+      </a>
+    </div>
+
+    <h2>Solved papers — nothing left out</h2>
+    <p>All numerical answers below were re-derived and <strong>verified by code</strong>. Where the only available “official” key had arithmetic slips (the Jul 2023 key), the corrected working is shown and flagged.</p>
+    <div class="grid c2">
+      <a class="card" href="s-dec2025.html">
+        <div class="k">21 Dec 2025 · newest</div><h3>Dec 2025 Midsem</h3>
+        <p>Wristband MDP (value iteration), ICU ventilator MDP, pharma bandit (recency-weighted Q, exploration), model-free control, chatbot first-visit MC.</p>
+        <span class="pill">4 questions · solved →</span>
+      </a>
+      <a class="card" href="s-jan2024.html">
+        <div class="k">27 Jan 2024 · closed book</div><h3>Jan 2024 Regular</h3>
+        <p>Tic-tac-toe & TD rule, bandit ε-greedy pseudocode, MDP returns, policy iteration, MC value estimation (first/every visit).</p>
+        <span class="pill">5 questions · solved →</span>
+      </a>
+      <a class="card" href="s-jul2023.html">
+        <div class="k">23 Jul 2023 · open book</div><h3>Jul 2023 Regular</h3>
+        <p>Zebra-crossing MDP + Bellman, Netflix bandit exploration, robot line-world DP (policy & value iteration), multi-user MC + importance sampling.</p>
+        <span class="pill">4 questions · solved →</span>
+      </a>
+      <a class="card" href="s-jul2024-regular.html">
+        <div class="k">21 Jul 2024 · closed book</div><h3>Jul 2024 Regular</h3>
+        <p>Rewards vs. returns, α & exploration, optimistic/UCB table, recycling-robot q-values, episodic reward-design trap, ε-soft MC control.</p>
+        <span class="pill">5 questions · solved →</span>
+      </a>
+      <a class="card" href="s-jul2024-makeup.html">
+        <div class="k">28 Jul 2024 · closed book</div><h3>Jul 2024 Makeup</h3>
+        <p>RL vs. unsupervised, model-based/free, the 4-box game (in-place value iteration), reward signs, bandit exploration, discount-dependent optimal policy, ε-soft MC control.</p>
+        <span class="pill">5 questions · solved →</span>
+      </a>
+      <a class="card" href="cheatsheet.html">
+        <div class="k">Revision</div><h3>📋 One-page Cheat-Sheet</h3>
+        <p>Every formula, rule and definition you need, condensed onto a single printable page.</p>
+        <span class="pill">Open / print →</span>
+      </a>
+    </div>
+
+    <div class="callout info">
+      <div class="cico">✅</div>
+      <div class="cbody">
+        <div class="ctitle">What “verified” means here</div>
+        The value-iteration sweeps, bandit Q-updates, discounted returns and Monte-Carlo averages on every solution page were computed independently in Python and matched against the hand-derivations shown. The diagrams that were embedded as photos in the PDFs (e.g. the Dec 2025 wristband MDP, the recycling robot, the 4-box game) were read directly from the source and redrawn here.
+      </div>
+    </div>
+
+    <div class="pager">
+      <span></span>
+      <a class="next" href="t1-rl-fundamentals.html"><div class="dir">Begin →</div><div class="ttl">① RL Fundamentals</div></a>
+    </div>
+
+  </div></main>
+</div>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solved · Dec 2025 Midsem · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="s-dec2025.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Solved Paper · 21 December 2025</span>
+  <h1>Dec 2025 Midsem — full solutions</h1>
+  <p class="lead">Four questions: a wristband MDP (value iteration), an ICU ventilator MDP, a pharma multi-armed bandit, and model-free control with a chatbot Monte-Carlo update. Attempt each before revealing. All numbers verified by code.</p>
+  <button class="btn ghost no-print" onclick="revealAll()">Reveal all solutions (for printing)</button>
+
+  <!-- ============ Q1 ============ -->
+  <div class="qcard">
+    <div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 1 · Health-monitoring wristband</span></div>
+    <div class="qbody">
+      <p>A wristband chooses among Mode A (low power), B (medium), C (high) each hour based on activity (resting / moderate / high).</p>
+
+      <h4>(a) Why RL not supervised? Immediate reward vs long-term value. <span class="small">[1.5]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p><strong>Why RL.</strong> There is no labelled “correct mode” for each activity — feedback arrives only as a reward <em>after</em> a mode is chosen, the reward depends on the user’s (changing) activity, and good behaviour must be <em>discovered by trying</em> modes and observing pay-off. Supervised learning would need the correct mode supplied for every situation in advance, which we never have. So this is evaluative, trial-and-error learning ⇒ RL.</p>
+        <div class="answer-final"><span class="lbl">One-line distinction</span> <strong>Immediate reward</strong> = the benefit of the mode chosen <em>this hour</em>; <strong>long-term value</strong> = the expected <em>total discounted</em> benefit from this state onward if we keep acting well.</div>
+      </div>
+
+      <h4>(b) Classify each case: MAB or finite MDP? <span class="small">[2]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p><strong>Case 1</strong> (activity independent of the mode chosen; today’s mode doesn’t affect future rewards): <strong>Multi-Armed Bandit.</strong> Each hour is an isolated choice — the action changes only the immediate reward, not the future situation, so there is effectively one state.</p>
+        <p><strong>Case 2</strong> (sampling Mode C too long raises battery temperature, lowering future rewards for power-hungry modes): <strong>Finite MDP.</strong> The added dependency means an action now <em>changes future reward dynamics / state</em> (battery temperature becomes part of the state). That coupling between present action and future return is exactly what distinguishes an MDP from a bandit.</p>
+        <div class="answer-final"><span class="lbl">Yes, the dependency changes the class</span> Case 1 = bandit; introducing state-dependent future consequences (Case 2) promotes it to a finite MDP.</div>
+      </div>
+
+      <h4>(c) Synchronous value iteration, γ = 0.1, one iteration, V₀ = 0. <span class="small">[4]</span></h4>
+      <p class="small">The MDP was given as a photo; here it is redrawn (black = Mode A, red = Mode B; each edge shows P, r).</p>
+
+      <svg class="diagram" viewBox="0 0 620 330" role="img" aria-label="wristband MDP">
+        <!-- nodes -->
+        <ellipse class="node" cx="120" cy="230" rx="64" ry="34"/><text x="120" y="235" text-anchor="middle" font-weight="700">Resting</text>
+        <ellipse class="node" cx="330" cy="70" rx="70" ry="34"/><text x="330" y="68" text-anchor="middle" font-weight="700">Moderate</text>
+        <ellipse class="node" cx="470" cy="250" rx="60" ry="34"/><text x="470" y="248" text-anchor="middle" font-weight="700">High</text>
+        <defs>
+          <marker id="bk" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-soft)"/></marker>
+          <marker id="rd" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--red)"/></marker>
+        </defs>
+        <!-- Resting A self loop -->
+        <path class="edge" d="M70 215 C 20 180, 20 270, 70 245" marker-end="url(#bk)"/>
+        <text x="20" y="225" class="lbl">A: P1, r1</text>
+        <!-- Resting B self loop -->
+        <path class="edge b" d="M110 266 C 80 320, 160 320, 135 266" marker-end="url(#rd)"/>
+        <text x="78" y="318" class="lblr">B: P.6, r1</text>
+        <!-- Moderate A self loop -->
+        <path class="edge" d="M290 45 C 250 5, 410 5, 372 47" marker-end="url(#bk)"/>
+        <text x="288" y="18" class="lbl">A: P.6, r1</text>
+        <!-- High B self loop -->
+        <path class="edge b" d="M520 240 C 575 205, 575 295, 522 268" marker-end="url(#rd)"/>
+        <text x="540" y="252" class="lblr">B:P1,r1</text>
+        <!-- Resting B -> Moderate (red, up) -->
+        <path class="edge b" d="M150 200 C 210 150, 250 120, 290 92" marker-end="url(#rd)"/>
+        <text x="150" y="150" class="lblr">B: P.4, r2</text>
+        <!-- Moderate A -> Resting (black, down) -->
+        <path class="edge" d="M300 100 C 240 140, 200 165, 168 200" marker-end="url(#bk)"/>
+        <text x="265" y="140" class="lbl">A: P.4, r2</text>
+        <!-- Moderate B -> High (red, down) -->
+        <path class="edge b" d="M360 100 C 405 150, 440 190, 458 218" marker-end="url(#rd)"/>
+        <text x="430" y="150" class="lblr">B: P.6, r2</text>
+        <!-- High A -> Moderate (black, up) -->
+        <path class="edge" d="M448 220 C 420 175, 390 130, 352 102" marker-end="url(#bk)"/>
+        <text x="360" y="200" class="lbl">A: P.5, r1</text>
+        <!-- High A self loop -->
+        <path class="edge" d="M450 282 C 420 325, 500 325, 488 282" marker-end="url(#bk)"/>
+        <text x="430" y="322" class="lbl">A: P.5, r1</text>
+      </svg>
+
+      <div class="tbl-wrap"><table>
+        <tr><th class="l">From</th><th class="l">Mode A → (P, r)</th><th class="l">Mode B → (P, r)</th></tr>
+        <tr><td class="l">Resting</td><td class="l">Resting (1.0, 1)</td><td class="l">Resting (0.6, 1) · Moderate (0.4, 2)</td></tr>
+        <tr><td class="l">Moderate</td><td class="l">Moderate (0.6, 1) · Resting (0.4, 2)</td><td class="l">Moderate (0.4, 1) · High (0.6, 2)</td></tr>
+        <tr><td class="l">High</td><td class="l">High (0.5, 1) · Moderate (0.5, 1)</td><td class="l">High (1.0, 1)</td></tr>
+      </table></div>
+
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p>Update rule (synchronous, all \(V_0=0\)): \(V_1(s)=\max_a \sum_{s'}P(s'\mid s,a)\,[\,r+\gamma V_0(s')\,]\). Since \(V_0=0\) everywhere, the \(\gamma V_0\) terms vanish and each \(Q\) is just the expected immediate reward.</p>
+        <ol class="steps">
+          <li><strong>Resting.</strong> A: \(1.0(1)=1.0\). &nbsp; B: \(0.6(1)+0.4(2)=0.6+0.8=1.4\). &nbsp;⇒ \(V(\text{Rest})=\max(1.0,1.4)=\mathbf{1.4}\) (Mode B).</li>
+          <li><strong>Moderate.</strong> A: \(0.6(1)+0.4(2)=1.4\). &nbsp; B: \(0.4(1)+0.6(2)=0.4+1.2=1.6\). &nbsp;⇒ \(V(\text{Mod})=\max(1.4,1.6)=\mathbf{1.6}\) (Mode B).</li>
+          <li><strong>High.</strong> A: \(0.5(1)+0.5(1)=1.0\). &nbsp; B: \(1.0(1)=1.0\). &nbsp;⇒ \(V(\text{High})=\max(1.0,1.0)=\mathbf{1.0}\) (tie A/B).</li>
+        </ol>
+        <div class="answer-final"><span class="lbl">Answer (resting, moderate, high)</span> \(V=(\,\mathbf{1.4},\ \mathbf{1.6},\ \mathbf{1.0}\,)\). Greedy modes after iteration 1: B, B, A/B (tie).</div>
+        <div class="callout info"><div class="cico">🧠</div><div class="cbody">Because \(\gamma=0.1\) is tiny <em>and</em> \(V_0=0\), discounting plays no role in the very first sweep — it only matters from iteration 2 onward, where successor values feed back at 10% weight.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Q2 ============ -->
+  <div class="qcard">
+    <div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 2 · ICU ventilator MDP</span></div>
+    <div class="qbody">
+      <p>Adjust ventilator pressure to keep SpO₂ safe. States ≈ {lowO₂, OptimalO₂, highO₂}; actions {increase, decrease, maintain}. Increasing/decreasing leaves health unchanged w.p. 0.4; maintain always keeps the condition. Stabilises once SpO₂ is Optimal for four consecutive readings.</p>
+
+      <h4>(a) Formulate the MDP + dynamics diagram. <span class="small">[2.5]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <ul>
+          <li><strong>States \(\mathcal S\):</strong> {lowO₂, OptimalO₂, highO₂} (plus an absorbing <em>Stabilised</em> terminal reached after 4 consecutive Optimal readings — you may track a “consecutive-optimal” count in the state).</li>
+          <li><strong>Actions \(\mathcal A\):</strong> {increase pressure, decrease pressure, maintain}.</li>
+          <li><strong>Transitions \(p\):</strong> increase/decrease → condition unchanged w.p. 0.4; the remaining 0.6 splits equally between the other outcomes (equal-likelihood assumption). <em>Maintain</em> → stays in the same state w.p. 1.</li>
+          <li><strong>Rewards \(R\):</strong> positive for moving toward / staying in OptimalO₂; negative for over-ventilation (→ highO₂) and for lowO₂.</li>
+          <li><strong>Discount \(\gamma\in(0,1)\)</strong>; terminal = Stabilised.</li>
+        </ul>
+        <svg class="diagram" viewBox="0 0 560 180" role="img" aria-label="ICU MDP">
+          <ellipse class="node" cx="90" cy="90" rx="58" ry="32"/><text x="90" y="94" text-anchor="middle" font-weight="700">lowO₂</text>
+          <ellipse class="node" cx="280" cy="90" rx="64" ry="32"/><text x="280" y="94" text-anchor="middle" font-weight="700">OptimalO₂</text>
+          <ellipse class="node" cx="470" cy="90" rx="58" ry="32"/><text x="470" y="94" text-anchor="middle" font-weight="700">highO₂</text>
+          <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-soft)"/></marker></defs>
+          <path class="edge" d="M148 80 C 190 60, 210 60, 222 78" marker-end="url(#a2)"/><text x="185" y="55" class="lbl">increase +10</text>
+          <path class="edge" d="M338 100 C 380 120, 400 120, 414 102" marker-end="url(#a2)"/><text x="360" y="135" class="lblr">over-vent −70</text>
+          <path class="edge" d="M280 122 C 250 160, 310 160, 280 122" marker-end="url(#a2)"/><text x="232" y="158" class="lbl">maintain (stay)</text>
+        </svg>
+      </div>
+
+      <h4>(b) Reward Design A (+10 low→Optimal) vs B (−70 Optimal→high). <span class="small">[2]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p><strong>(i) Behaviour each encourages.</strong> Design A rewards <em>reaching</em> Optimal from a bad state but is silent about staying there, so the agent may oscillate; Design B actively <em>punishes</em> over-ventilation, discouraging the dangerous Optimal→high transition.</p>
+        <p><strong>(ii) When each is preferable.</strong> Use A when the priority is recovering hypoxic (lowO₂) patients quickly; prefer <strong>B</strong> when over-ventilation is the main safety risk — the large −70 makes the agent risk-averse around the upper threshold. <em>Preferred: Design B for patient safety</em> (a real system would combine both: +10 to reach Optimal and −70 to deter over-ventilation).</p>
+      </div>
+
+      <h4>(c) Episodic or continuing? <span class="small">[1.5]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <div class="answer-final"><span class="lbl">Episodic</span> There is a terminal condition — four consecutive Optimal readings ⇒ the patient stabilises, ending the episode. Each patient stay is a finite episode, so the task is episodic (not endless).</div>
+      </div>
+
+      <h4>(d) Impact of γ = 0.01. <span class="small">[1.5]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <div class="answer-final"><span class="lbl">Destabilising / myopic</span> γ ≈ 0.01 makes the agent almost purely short-sighted (\(\gamma^2{=}10^{-4}\)): it chases the next-step reward and essentially ignores future consequences like sustained stabilisation, so it may take locally-rewarding but globally-unsafe actions — undermining stable long-horizon SpO₂ control.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Q3 ============ -->
+  <div class="qcard">
+    <div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 3 · Pharma adherence bandit</span></div>
+    <div class="qbody">
+      <p>Interventions S (SMS refill), T (teleconsult), R (lab reminder), C (counseling). Observations: (1,S,7) (2,T,5) (3,R,6) (4,C,4) (5,S,8) (6,T,6) (7,R,7) (8,C,5).</p>
+
+      <h4>(a) Best intervention via exponential recency-weighted update, α = 0.5, init 0. <span class="small">[3]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p>Update each chosen arm by \(Q\leftarrow Q+0.5\,(r-Q)\); each arm is pulled twice.</p>
+        <div class="tbl-wrap"><table>
+          <tr><th class="l">Arm</th><th>1st pull</th><th>2nd pull</th><th>Final Q</th></tr>
+          <tr><td class="l">S</td><td>0+0.5(7−0)=3.5</td><td>3.5+0.5(8−3.5)</td><td class="hl">5.75</td></tr>
+          <tr><td class="l">R</td><td>0+0.5(6−0)=3.0</td><td>3.0+0.5(7−3.0)</td><td class="hl">5.0</td></tr>
+          <tr><td class="l">T</td><td>0+0.5(5−0)=2.5</td><td>2.5+0.5(6−2.5)</td><td class="hl">4.25</td></tr>
+          <tr><td class="l">C</td><td>0+0.5(4−0)=2.0</td><td>2.0+0.5(5−2.0)</td><td class="hl">3.5</td></tr>
+        </table></div>
+        <div class="answer-final"><span class="lbl">Best intervention</span> <strong>S (SMS refill reminder)</strong>, with Q(S)=5.75 &gt; Q(R)=5.0 &gt; Q(T)=4.25 &gt; Q(C)=3.5.</div>
+      </div>
+
+      <h4>(b) Significance of α; what if α = 1? <span class="small">[1.5]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <div class="answer-final"><span class="lbl">≤30 words</span> α weights recent observations: larger α adapts faster to changing patient response but is noisier. At α = 1, \(Q\leftarrow r\) — e.g. Q(S) would jump straight to 8, forgetting the earlier 7 entirely; the estimate tracks only the last reward.</div>
+      </div>
+
+      <h4>(c) Significance of the confidence level in UCB. <span class="small">[1]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <div class="answer-final"><span class="lbl">≤30 words</span> The confidence term \(c\sqrt{\ln t/N(a)}\) boosts rarely-tried interventions: a higher c makes UCB explore uncertain arms (e.g. give Counseling more chances) before committing, balancing exploration against current Q-estimates.</div>
+      </div>
+
+      <h4>(d) Exploratory analysis up to t = 5. <span class="small">[2]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p>Using the Q-values <em>before</em> each pick (from the α=0.5 updates), the greedy arm is the current arg-max:</p>
+        <div class="tbl-wrap"><table>
+          <tr><th>t</th><th>chose</th><th>Q before (S,T,R,C)</th><th>greedy</th><th>verdict</th></tr>
+          <tr><td>1</td><td>S</td><td>0,0,0,0</td><td>all tied</td><td class="hl-amber">possible</td></tr>
+          <tr><td>2</td><td>T</td><td>3.5,0,0,0</td><td>S</td><td class="hl">DEFINITE</td></tr>
+          <tr><td>3</td><td>R</td><td>3.5,2.5,0,0</td><td>S</td><td class="hl">DEFINITE</td></tr>
+          <tr><td>4</td><td>C</td><td>3.5,2.5,3.0,0</td><td>S</td><td class="hl">DEFINITE</td></tr>
+          <tr><td>5</td><td>S</td><td>3.5,2.5,3.0,2.0</td><td>S</td><td class="hl-amber">possible</td></tr>
+        </table></div>
+        <div class="answer-final"><span class="lbl">Answer</span> <strong>(i) Definitely exploratory: t = 2, 3, 4</strong> — a non-greedy arm was chosen, only possible via the ε-branch. <strong>(ii) Possibly exploratory: t = 1</strong> (all Q tied — any pick is greedy-consistent but could be random) <strong>and t = 5</strong> (S was greedy, yet a random draw could also have landed on S).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Q4 ============ -->
+  <div class="qcard">
+    <div class="qhead"><span class="marks">7.5 marks</span><span class="qno">Question 4 · Model-free control + chatbot MC</span></div>
+    <div class="qbody">
+      <h4>(a) Why is estimating only \(v_\pi(s)\) insufficient for control? <span class="small">[2]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p>To pick the best action from state values you must evaluate \(\arg\max_a \sum_{s',r}p(s',r\mid s,a)[r+\gamma v_\pi(s')]\), which <strong>requires the model</strong> \(p(s',r\mid s,a)\). In a model-free MDP you don’t have \(p\), so even a perfect \(v_\pi\) cannot tell you which action leads to those good successor states. You therefore estimate <strong>action values \(q_\pi(s,a)\)</strong>, because \(\arg\max_a q_\pi(s,a)\) selects actions <em>without</em> any model.</p>
+      </div>
+
+      <h4>(b) Why can first-visit MC under a deterministic policy fail? Fix? <span class="small">[2]</span></h4>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p>A deterministic policy always takes the same action in a state, so the <em>other</em> actions are <strong>never visited</strong> and their \(q\)-values are never updated from their initial guesses. The agent can never discover that an unexplored action is better, so it can lock onto a sub-optimal policy. <strong>Fix:</strong> ensure continual exploration — use an <strong>ε-soft policy</strong> (every action has probability ≥ ε/|𝒜|) or <strong>exploring starts</strong>.</p>
+      </div>
+
+      <h4>(c) First-visit MC update for the chatbot episode. <span class="small">[3.5]</span></h4>
+      <p>States s₀ (engaged), s₁ (disengaged); actions a₁,a₂,a₃. γ = 0.8. Initial Q and ε-soft π:</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>Q</th><th>a₁</th><th>a₂</th><th>a₃</th><th>&nbsp;</th><th>π</th><th>a₁</th><th>a₂</th><th>a₃</th></tr>
+        <tr><td>s₀</td><td>1</td><td>0.5</td><td>0</td><td></td><td>s₀</td><td>0.5</td><td>0.3</td><td>0.2</td></tr>
+        <tr><td>s₁</td><td>0</td><td>0.5</td><td>1</td><td></td><td>s₁</td><td>0.2</td><td>0.5</td><td>0.3</td></tr>
+      </table></div>
+      <p>Episode: \((s_0,a_1,r{=}2,s_0)\to(s_0,a_3,r{=}0,s_1)\to(s_1,a_2,r{=}3,s_1)\to(s_1,a_2,r{=}-1,\text{terminal})\).</p>
+      <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+      <div class="solution">
+        <p><strong>Step 1 — returns (work backward, γ=0.8).</strong></p>
+        <ol class="steps">
+          <li>\(G_3=-1\) &nbsp;(last step, (s₁,a₂))</li>
+          <li>\(G_2=3+0.8(-1)=2.2\) &nbsp;((s₁,a₂))</li>
+          <li>\(G_1=0+0.8(2.2)=1.76\) &nbsp;((s₀,a₃))</li>
+          <li>\(G_0=2+0.8(1.76)=3.408\) &nbsp;((s₀,a₁))</li>
+        </ol>
+        <p><strong>Step 2 — first visits.</strong> (s₀,a₁) first at t0 → 3.408; (s₀,a₃) first at t1 → 1.76; (s₁,a₂) first at t2 → 2.2 (the t3 visit is a <em>repeat</em>, ignored by first-visit). Each is the first observed return, so the estimate moves to that return.</p>
+        <div class="tbl-wrap"><table>
+          <tr><th>Q (revised)</th><th>a₁</th><th>a₂</th><th>a₃</th></tr>
+          <tr><td>s₀</td><td class="hl">1 → 3.408</td><td>0.5</td><td class="hl">0 → 1.76</td></tr>
+          <tr><td>s₁</td><td>0</td><td class="hl">0.5 → 2.2</td><td>1</td></tr>
+        </table></div>
+        <p><strong>Step 3 — improve the policy (ε-greedy w.r.t. revised Q).</strong> New greedy: s₀ → a₁ (3.408, still greatest), s₁ → <strong>a₂ (2.2)</strong>, which overtakes the old greedy a₃ (=1).</p>
+        <div class="tbl-wrap"><table>
+          <tr><th>π (revised, ε = 0.3 say)</th><th>a₁</th><th>a₂</th><th>a₃</th></tr>
+          <tr><td>s₀ &nbsp;(greedy a₁)</td><td class="hl">0.8</td><td>0.1</td><td>0.1</td></tr>
+          <tr><td>s₁ &nbsp;(greedy a₂ — <em>changed</em>)</td><td>0.1</td><td class="hl">0.8</td><td>0.1</td></tr>
+        </table></div>
+        <div class="answer-final"><span class="lbl">Key change</span> The single episode flips the greedy action at <strong>s₁ from a₃ to a₂</strong> (since the observed return 2.2 &gt; old value 1). At s₀ the greedy action stays a₁ but its value rises to 3.408. With ε-greedy and |𝒜|=3, the greedy action gets \(1-\varepsilon+\varepsilon/3\) and the others \(\varepsilon/3\).</div>
+        <div class="callout warn"><div class="cico">📝</div><div class="cbody"><div class="ctitle">Convention note</div>
+        Here each visited pair’s estimate is set to its first observed return (textbook “first return = first average”). If your instructor instead treats the given Q as a prior sample, average it with the return — e.g. Q(s₁,a₂)=(0.5+2.2)/2=1.35. Either way the <em>greedy action and policy change are identical</em> (s₁: a₃→a₂), so state your assumption and the conclusion holds. ε itself isn’t given; any ε∈(0,1) works — ε=0.3 just gives clean 0.8 / 0.1 / 0.1.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pager">
+    <a href="t5-monte-carlo.html"><div class="dir">← Topics</div><div class="ttl">⑤ Monte Carlo</div></a>
+    <a class="next" href="s-jan2024.html"><div class="dir">Next paper →</div><div class="ttl">Jan 2024 Regular</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>

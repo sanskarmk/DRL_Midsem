@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>④ Dynamic Programming · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="t4-dynamic-programming.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Topic ④ · Planning with a model</span>
+  <h1>Dynamic Programming</h1>
+  <p class="lead">Given a <strong>known model</strong>, DP computes optimal values and policies by repeatedly applying the Bellman equations as <em>update rules</em>. The two algorithms — <strong>policy iteration</strong> and <strong>value iteration</strong> — are exam staples, and the synchronous vs. in-place distinction decides your arithmetic.</p>
+
+  <div class="toc"><h4>On this page</h4><ul>
+    <li><a href="#idea">The core idea</a></li>
+    <li><a href="#eval">Policy evaluation</a></li>
+    <li><a href="#improve">Policy improvement</a></li>
+    <li><a href="#pi">Policy iteration</a></li>
+    <li><a href="#vi">Value iteration</a></li>
+    <li><a href="#sync">Synchronous vs. in-place</a></li>
+    <li><a href="#worked">Worked value-iteration sweep</a></li>
+    <li><a href="#when">When DP is appropriate</a></li>
+    <li><a href="#quiz">Check yourself</a></li>
+  </ul></div>
+
+  <h2 id="idea">1. The core idea</h2>
+  <p>The Bellman equations are fixed-point equations. Turn the “=” into a “←” and iterate, and the values converge to the true solution. DP is <strong>model-based</strong> (needs \(p(s',r\mid s,a)\)) and <strong>bootstraps</strong> (updates estimates from other estimates).</p>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">Two intertwined jobs</div>
+  <strong>Prediction</strong> = evaluate a given policy (find \(v_\pi\)). <strong>Control</strong> = find the best policy (find \(v_*,\pi_*\)). Policy iteration and value iteration are two recipes for control built out of the prediction step.</div></div>
+
+  <h2 id="eval">2. Policy evaluation (prediction)</h2>
+  <p>Repeatedly apply the Bellman expectation equation as an update until values stop changing:</p>
+  <div class="mathblock">\[ V_{k+1}(s)\leftarrow \sum_a \pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\big[r+\gamma V_k(s')\big] \]</div>
+  <p>For a deterministic policy this simplifies to one term per state: \(V(s)\leftarrow r + \gamma V(s')\) for the action \(\pi(s)\) dictates.</p>
+
+  <h2 id="improve">3. Policy improvement</h2>
+  <p>Given \(v_\pi\), build a better policy by acting <strong>greedily</strong> on one-step look-ahead:</p>
+  <div class="mathblock">\[ \pi'(s)=\arg\max_a \sum_{s',r}p(s',r\mid s,a)\big[r+\gamma v_\pi(s')\big] \]</div>
+  <div class="callout info"><div class="cico">📈</div><div class="cbody"><div class="ctitle">Policy improvement theorem</div>
+  Acting greedily w.r.t. \(v_\pi\) yields a policy \(\pi'\) that is <em>no worse</em> at every state: \(v_{\pi'}(s)\ge v_\pi(s)\). If it’s not strictly better anywhere, \(\pi\) was already optimal. This guarantee is what makes the next algorithm converge.</div></div>
+
+  <h2 id="pi">4. Policy iteration</h2>
+  <p>Alternate the two steps until the policy stops changing:</p>
+  <pre><code>1. Initialise π arbitrarily
+2. EVALUATION : iterate V(s) ← Σ_a π(a|s) Σ p[r + γV(s')]  until V converges
+3. IMPROVEMENT: π'(s) ← argmax_a Σ p[r + γV(s')]
+4. if π' == π : stop (π is optimal)   else π ← π'  and go to 2</code></pre>
+  <div class="callout intuition"><div class="cico">🔁</div><div class="cbody"><div class="ctitle">Generalised Policy Iteration (GPI)</div>
+  Evaluation makes the value consistent with the policy; improvement makes the policy greedy w.r.t. the value. They pull toward each other and meet at the optimum \((v_*,\pi_*)\). Almost every RL method is an instance of this dance.</div></div>
+
+  <h2 id="vi">5. Value iteration</h2>
+  <p>Don’t bother fully evaluating each policy — fold improvement straight into the update by taking the max:</p>
+  <div class="mathblock">\[ V_{k+1}(s)\leftarrow \max_a \sum_{s',r}p(s',r\mid s,a)\big[r+\gamma V_k(s')\big] \]</div>
+  <p>Iterate to convergence, then read off the greedy policy once. It is policy iteration with exactly <em>one</em> sweep of evaluation between improvements.</p>
+
+  <h2 id="sync">6. Synchronous vs. asynchronous (in-place)</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th>Synchronous</th><th>Asynchronous / in-place</th></tr>
+    <tr><td class="l">Compute all new values from the <em>old</em> table, then overwrite together. Order doesn’t matter.</td><td class="l">Overwrite each state <em>immediately</em>; later states in the same sweep use the just-updated values. <strong>Order matters.</strong></td></tr>
+    <tr><td class="l">Dec 2025 Q1c says “synchronous”.</td><td class="l">Jul 2023 Q3 &amp; Jul 2024-makeup Q2 say “in-place / asynchronous”, and give you the sweep order.</td></tr>
+  </table></div>
+  <div class="callout pitfall"><div class="cico">⚠️</div><div class="cbody"><div class="ctitle">Read the question’s update style first</div>
+  In-place usually <em>propagates information faster</em> (a freshly-updated neighbour is used right away), but you must respect the stated order. Synchronous keeps a clean separation between iteration \(k\) and \(k{+}1\). Picking the wrong one is the most common arithmetic error on these papers.</div></div>
+
+  <h2 id="worked">7. Worked value-iteration sweep (Dec 2025 Q1c)</h2>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody">
+  Wristband MDP, states {resting, moderate, high}, actions {Mode A, Mode B}, \(\gamma=0.1\), <strong>synchronous</strong>, one iteration, all \(V_0=0\). Because every successor value is 0, the first sweep reduces to the expected immediate reward \(\sum p\cdot r\):
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">State</th><th>Mode A: \(\sum p(r+\gamma\cdot0)\)</th><th>Mode B</th><th>\(V_1=\max\)</th></tr>
+    <tr><td class="l">resting</td><td>\(1.0(1)=1.0\)</td><td>\(0.6(1)+0.4(2)=1.4\)</td><td class="hl">1.4 &nbsp;(B)</td></tr>
+    <tr><td class="l">moderate</td><td>\(0.6(1)+0.4(2)=1.4\)</td><td>\(0.4(1)+0.6(2)=1.6\)</td><td class="hl">1.6 &nbsp;(B)</td></tr>
+    <tr><td class="l">high</td><td>\(0.5(1)+0.5(1)=1.0\)</td><td>\(1.0(1)=1.0\)</td><td class="hl">1.0 &nbsp;(tie)</td></tr>
+  </table></div>
+  <div class="answer-final"><span class="lbl">Answer</span> \(V(\text{resting})=1.4,\;V(\text{moderate})=1.6,\;V(\text{high})=1.0\). (Full transition table and diagram are on the <a href="s-dec2025.html">Dec 2025 solution page</a>; replay any sweep on <a href="tools.html">Tools</a>.)</div>
+  </div></div>
+
+  <h2 id="when">8. When is a DP solution appropriate?</h2>
+  <p>(Jan 2024 Q4c.) DP fits when:</p>
+  <ul>
+    <li>The problem is a <strong>Markov</strong> decision process (current state summarises history).</li>
+    <li>A <strong>complete, accurate model</strong> \(p(s',r\mid s,a)\) is known.</li>
+    <li>State and action spaces are <strong>small enough</strong> to sweep exhaustively (no curse of dimensionality).</li>
+  </ul>
+  <p>Examples: inventory control with known demand distribution; gambler’s problem; small gridworlds; the recycling robot. DP becomes infeasible for huge spaces (e.g. Go, raw-pixel games) — that is precisely where sampling methods (MC, TD) and function approximation (deep RL) take over.</p>
+  <div class="callout warn"><div class="cico">📉</div><div class="cbody"><div class="ctitle">Scalability comment (Jul 2023 Q3c)</div>
+  Both policy iteration and value iteration sweep <em>every</em> state each iteration, so cost grows with \(|\mathcal S|\times|\mathcal A|\). For large or continuous spaces this is intractable, and you need approximation / sampling instead. They also require the full model, which is often unavailable in practice.</div></div>
+
+  <h2 id="quiz">9. Check yourself</h2>
+  <div class="quiz">
+    <div class="qz-q">Q1. Value iteration’s update uses which operator over actions?</div>
+    <div class="qz-opt" data-correct="0">average weighted by \(\pi\)</div>
+    <div class="qz-opt" data-correct="1">max</div>
+    <div class="qz-opt" data-correct="0">min</div>
+    <div class="qz-opt" data-correct="0">sum</div>
+    <div class="qz-exp">VI folds policy improvement into evaluation by taking \(\max_a\) every sweep.</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q2. In <em>in-place</em> value iteration, why does the sweep order matter?</div>
+    <div class="qz-opt" data-correct="1">later states use neighbours’ already-updated values</div>
+    <div class="qz-opt" data-correct="0">it changes the discount factor</div>
+    <div class="qz-opt" data-correct="0">it changes the reward function</div>
+    <div class="qz-opt" data-correct="0">it doesn’t — order never matters</div>
+    <div class="qz-exp">In-place overwrites immediately, so a state updated later in the sweep may read a neighbour’s new value, giving different intermediate numbers (and faster propagation).</div>
+  </div>
+  <div class="quiz">
+    <div class="qz-q">Q3. DP is <em>inappropriate</em> when…</div>
+    <div class="qz-opt" data-correct="0">the model is known and the space is small</div>
+    <div class="qz-opt" data-correct="1">the state space is enormous or the model is unknown</div>
+    <div class="qz-opt" data-correct="0">the task is Markov</div>
+    <div class="qz-opt" data-correct="0">rewards are bounded</div>
+    <div class="qz-exp">DP needs a full model and must sweep all states — both break down for very large spaces or unknown dynamics.</div>
+  </div>
+
+  <div class="pager">
+    <a href="t3-mdps.html"><div class="dir">← Prev</div><div class="ttl">③ MDPs</div></a>
+    <a class="next" href="t5-monte-carlo.html"><div class="dir">Next →</div><div class="ttl">⑤ Monte Carlo Methods</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>
