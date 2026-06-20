@@ -6,6 +6,26 @@
 <title>📖 The Whole Syllabus as One Story · DRL Exam Prep</title>
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/app.js"></script>
+<style>
+/* ---- story-only: audio narration UI ---- */
+.narrate-bar{position:sticky;top:8px;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+  background:var(--bg);border:1px solid var(--line-strong);border-radius:12px;padding:11px 15px;margin:6px 0 26px;
+  box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.narrate-bar .nb-title{font-weight:700;font-size:14px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.narrate-bar .nb-now{font-size:12.5px;color:var(--accent);font-weight:600;min-width:60px}
+.narrate-bar .spacer{flex:1 1 12px}
+.narrate-bar label{font-size:12.5px;color:var(--text-soft);display:flex;align-items:center;gap:6px}
+.narrate-bar input[type=range]{width:96px;vertical-align:middle;accent-color:var(--accent)}
+.narr-note{font-size:11.5px;color:var(--muted);flex-basis:100%}
+.listen-btn{margin-left:10px;font-size:11.5px;font-weight:600;border:1px solid var(--accent);color:var(--accent);
+  background:var(--accent-soft);border-radius:20px;padding:2px 10px;cursor:pointer;vertical-align:middle;font-family:var(--sans)}
+.listen-btn:hover{background:var(--accent);color:#fff}
+.listen-btn.playing{background:var(--accent);color:#fff}
+.narrate-active{box-shadow:inset 3px 0 0 var(--accent);border-radius:4px;transition:box-shadow .25s}
+h2.narrate-active{background:var(--accent-soft);padding:4px 8px;margin-left:-8px}
+.page h2{scroll-margin-top:96px}
+@media print{.narrate-bar,.listen-btn{display:none!important}}
+</style>
 </head>
 <body data-page="story.html">
 <button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
@@ -16,6 +36,16 @@
   <span class="eyebrow">Big picture · 12-minute read</span>
   <h1>The whole syllabus as one story</h1>
   <p class="lead">Meet <strong>Riya</strong>, who opens a tea stall and slowly learns to run it brilliantly. Her journey <em>is</em> the syllabus: every concept appears exactly when she needs it. Read it once and the formulas stop being abstract.</p>
+
+  <div class="narrate-bar no-print" id="narrate-bar">
+    <span class="nb-title">🎧 Narration</span>
+    <button class="btn" id="nr-play" style="margin:0">▶ Play narration</button>
+    <button class="btn ghost" id="nr-pause" style="margin:0;display:none">⏸ Pause</button>
+    <span class="nb-now" id="nr-now"></span>
+    <span class="spacer"></span>
+    <label>speed <input type="range" id="nr-rate" min="0.7" max="1.3" step="0.05" value="1"></label>
+    <span class="narr-note">Reads each chapter aloud with your browser’s built-in voice, auto-scrolling and highlighting as it goes. Click 🔊 Listen on any chapter to start there. (Works in Chrome, Edge &amp; Safari.)</span>
+  </div>
 
   <div class="callout intuition"><div class="cico">🧵</div><div class="cbody"><div class="ctitle">The single thread</div>
   One idea runs through everything: <strong>choose actions now to maximise reward over time.</strong> Bandits, MDPs, dynamic programming and Monte Carlo are just four situations Riya finds herself in — with more or less information about her world.</div></div>
@@ -134,5 +164,106 @@
 
   </div></main>
 </div>
+
+<script>
+/* ============ Story-page audio narration (Web Speech API) ============ */
+(function(){
+  const NARR = [
+    {id:'c0', label:'Chapter 0', text:`Chapter zero. Meet Riya. She wheels her tea stall to a street corner with no instruction manual. She has to learn what sells just by trying things and watching what earns money. That one sentence is reinforcement learning. Riya is the agent. The street, the weather, and the customers are the environment. Each morning she sees a state, for example it is raining and the bus stop is crowded. She takes an action, like brewing masala chai. The world replies with a reward, the rupees in her tin, and a new state. One full day is an episode, the play by play of that day is the trajectory, and the total profit still to come is the return. The discount factor gamma simply means she values a rupee today a little more than a rupee next week.`},
+    {id:'c1', label:'Chapter 1', text:`Chapter one. Riya's corner is fixed, and today's choice of special does not change who shows up tomorrow. It only changes today's takings. Four choices, each with an unknown average payoff, and no lasting consequences. That is a multi armed bandit. She keeps a running estimate of each tea's average profit and faces the classic tension: exploit the best one so far, or explore the others in case one is secretly better. Her simple rule is epsilon greedy: usually pick the current best, but now and then try a random tea. She could also start by assuming every tea is wonderful, which pushes her to try them all early, or deliberately re-test the teas she is least sure about. And if a festival suddenly changes everyone's taste, she switches to a constant step size so that recent sales count more than old ones.`},
+    {id:'c2', label:'Chapter 2', text:`Chapter two. Business grows, so Riya buys a cart she can move. Now everything changes. Where she parks today decides who becomes a regular tomorrow, so her actions have consequences that ripple forward. This is a Markov decision process. The state now genuinely matters, and the Markov idea is a comfort: tomorrow depends only on today's situation, not her entire history. To choose well she values the future with two tools. The state value is how much total profit she expects from a situation. The action value is the same, but committing to one action first. A tea that earns a lot today but ruins her reputation can actually be worth less than a modest, loyalty building choice. Reward is the hour; value is the whole future.`},
+    {id:'c3', label:'Chapter 3', text:`Chapter three. Imagine the city hands Riya a perfect spreadsheet that predicts every outcome, a complete model of her world. Now she does not need to experiment. She can plan at her kitchen table. That is dynamic programming. She repeats two moves: policy evaluation, scoring how good her current plan really is, and policy improvement, switching each choice to whatever the numbers now say is best. Loop those two and it is called policy iteration. A shortcut that simply keeps taking the best next step is value iteration. The catch is that this needs a complete model and a world small enough to check every situation, luxuries she rarely has in real life.`},
+    {id:'c4', label:'Chapter 4', text:`Chapter four, and this is the heart of your mid sem. In reality there is no spreadsheet. So Riya does the honest thing: she runs full days and writes down what actually happened. That is Monte Carlo learning. No model, just real experience averaged over many complete days. At day's end she replays it, and for each situation she notes the total profit that followed, then averages across all her days. If a rainy morning at the college gate gave returns of ten, eight, and twelve, its value is their average, which is ten. If she passed the same spot twice in one day, first visit Monte Carlo counts only the first time, while every visit counts both. To keep improving she must keep exploring, either by starting some days in unusual situations, or by keeping a little randomness in her plan with an epsilon soft policy. Estimating values from real days and then shifting her plan toward what earned the most is called Monte Carlo control. And because she learns from days run under her own slightly random plan, this is on policy learning.`},
+    {id:'c5', label:'Chapter 5', text:`Chapter five. Monte Carlo makes Riya wait until closing time to learn anything. A faster friend asks, why wait? The moment the next hour beats your expectation, update your gut feeling right then. That is temporal difference learning: adjust each estimate using the next reward plus your current guess of what comes after. Just remember that the step size controls how fast she learns, not how much she explores. That distinction is a classic exam trap.`},
+    {id:'c6', label:'Chapter 6', text:`Chapter six, what is actually on your exam. Riya's whole story is fair game, except one chapter she has not reached. One day a friend offers to share her own sales diary, run in a totally different style, and asks Riya to learn the best plan from someone else's behaviour. Doing that correctly needs off policy learning with importance sampling, and your professor said that is not on the mid sem. So understand the idea, learning from a different policy's data, but do not worry about the maths. Your exam playground is everything up to on policy Monte Carlo control.`},
+    {id:'cast', label:'Recap', text:`And that is the whole syllabus in one story. Bandits are one repeated choice with no consequences. A Markov decision process is choices that change your future. Dynamic programming solves it by planning with a model. Monte Carlo solves it by averaging real days without a model, and on policy means you learn from your own slightly exploratory behaviour. Good luck. You have got this.`},
+  ];
+
+  const bar = document.getElementById('narrate-bar');
+  if(!('speechSynthesis' in window)){
+    if(bar) bar.innerHTML = '<span class="nb-title">🎧 Narration</span><span class="narr-note">Audio narration isn’t supported in this browser. Try Chrome, Edge, or Safari.</span>';
+    return;
+  }
+  const synth = window.speechSynthesis;
+  let queue=[], qi=0, playing=false, paused=false, curId=null, voice=null;
+
+  function pickVoice(){
+    const vs = synth.getVoices(); if(!vs.length) return null;
+    return vs.find(v=>/^en[-_]/i.test(v.lang) && /google|samantha|aria|zira|jenny|natural|female/i.test(v.name))
+        || vs.find(v=>/^en[-_]?(US|GB|IN)/i.test(v.lang))
+        || vs.find(v=>/^en/i.test(v.lang)) || vs[0];
+  }
+  function splitSentences(t){ return (t.match(/[^.!?]+[.!?]+|\S[^.!?]*$/g)||[t]).map(s=>s.trim()).filter(Boolean); }
+
+  function clearHi(){ document.querySelectorAll('.narrate-active').forEach(e=>e.classList.remove('narrate-active')); }
+  function highlight(id){
+    clearHi();
+    const h=document.getElementById(id); if(!h) return;
+    let el=h;
+    while(el){ el.classList.add('narrate-active'); el=el.nextElementSibling; if(el && el.tagName==='H2') break; }
+    h.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function markBtns(){
+    document.querySelectorAll('.listen-btn').forEach(b=>b.classList.toggle('playing', playing && b.dataset.id===curId));
+    const now=document.getElementById('nr-now');
+    const n=NARR.find(x=>x.id===curId);
+    if(now) now.textContent = playing && n ? '▶ '+n.label : '';
+  }
+
+  function speakNext(){
+    if(!playing) return;
+    if(qi>=queue.length){ stop(); return; }
+    const item=queue[qi];
+    if(item.id!==curId){ curId=item.id; highlight(curId); markBtns(); }
+    const u=new SpeechSynthesisUtterance(item.text);
+    if(!voice) voice=pickVoice();
+    if(voice) u.voice=voice;
+    u.rate=parseFloat((document.getElementById('nr-rate')||{}).value||'1');
+    u.onend=()=>{ if(playing && !paused){ qi++; speakNext(); } };
+    u.onerror=()=>{ if(playing && !paused){ qi++; speakNext(); } };
+    synth.speak(u);
+  }
+  function buildQueue(from){
+    queue=[];
+    for(let i=from;i<NARR.length;i++) splitSentences(NARR[i].text).forEach(s=>queue.push({id:NARR[i].id, text:s}));
+    qi=0;
+  }
+  function playFrom(idx){
+    synth.cancel(); buildQueue(idx); playing=true; paused=false; curId=null; setControls();
+    setTimeout(speakNext, 130); // let cancel settle (Chrome)
+  }
+  function stop(){ playing=false; paused=false; synth.cancel(); clearHi(); curId=null; setControls(); markBtns(); }
+  function pauseResume(){
+    if(!playing) return;
+    if(paused){ synth.resume(); paused=false; } else { synth.pause(); paused=true; }
+    setControls();
+  }
+  function setControls(){
+    const p=document.getElementById('nr-play'), pa=document.getElementById('nr-pause');
+    if(p) p.textContent = playing ? '⏹ Stop' : '▶ Play narration';
+    if(pa){ pa.style.display = playing ? 'inline-flex' : 'none'; pa.textContent = paused ? '▶ Resume' : '⏸ Pause'; }
+    markBtns();
+  }
+  const idxOf = id => NARR.findIndex(n=>n.id===id);
+
+  document.addEventListener('DOMContentLoaded', function(){
+    if(synth.onvoiceschanged !== undefined) synth.onvoiceschanged = ()=>{ voice=pickVoice(); };
+    voice=pickVoice();
+    const p=document.getElementById('nr-play'), pa=document.getElementById('nr-pause');
+    p.addEventListener('click', ()=>{ if(playing) stop(); else playFrom(0); });
+    pa.addEventListener('click', pauseResume);
+    // inject per-chapter Listen buttons
+    NARR.forEach(n=>{
+      const h=document.getElementById(n.id); if(!h) return;
+      const b=document.createElement('button');
+      b.className='listen-btn no-print'; b.type='button'; b.dataset.id=n.id; b.textContent='🔊 Listen';
+      b.addEventListener('click', ()=>playFrom(idxOf(n.id)));
+      h.appendChild(b);
+    });
+    setControls();
+  });
+  window.addEventListener('pagehide', ()=>{ try{ synth.cancel(); }catch(e){} });
+})();
+</script>
 </body>
 </html>
