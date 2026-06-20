@@ -20,7 +20,6 @@ const NAV = [
   { h:'Start here', items:[
     ['index.html','🏠','Home / Dashboard',''],
     ['cheatsheet.html','📋','Exam Cheat-Sheet',''],
-    ['tools.html','🧮','Interactive Tools',''],
   ]},
   { h:'Topics — learn the theory', items:[
     ['t1-rl-fundamentals.html','①','RL Fundamentals',''],
@@ -28,6 +27,10 @@ const NAV = [
     ['t3-mdps.html','③','Markov Decision Processes',''],
     ['t4-dynamic-programming.html','④','Dynamic Programming',''],
     ['t5-monte-carlo.html','⑤','Monte Carlo Methods',''],
+  ]},
+  { h:'Practice & drills', items:[
+    ['numericals.html','🔢','Numerical Drills','NEW'],
+    ['tools.html','🧮','Interactive Tools',''],
   ]},
   { h:'Solved papers — every question', items:[
     ['s-dec2025.html','📝','Dec 2025 Midsem','NEW'],

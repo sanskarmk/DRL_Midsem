@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔢 Numerical Drills · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="numericals.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Practice · Numericals</span>
+  <h1>Numerical Drills — by topic</h1>
+  <p class="lead">Extra solved problems for every numerical type on the exam (similar to — but not copied from — the papers). Try each, then reveal the full step-by-step solution. Every answer is code-verified.</p>
+  <button class="btn ghost no-print" onclick="revealAll()">Reveal all solutions</button>
+
+  <div class="toc"><h4>Jump to a topic</h4><ul>
+    <li><a href="#t1">① Returns, discounting &amp; TD</a></li>
+    <li><a href="#t2">② Multi-armed bandits</a></li>
+    <li><a href="#t3">③ MDPs &amp; Bellman</a></li>
+    <li><a href="#t4">④ Dynamic programming</a></li>
+    <li><a href="#t5">⑤ Monte Carlo</a></li>
+  </ul></div>
+
+  <!-- ================= TOPIC 1 ================= -->
+  <h2 id="t1">① Returns, discounting &amp; TD &nbsp;<span class="small">(see <a href="t1-rl-fundamentals.html">Topic ①</a>)</span></h2>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 1.1 · Discounted return</span></div><div class="qbody">
+    <div class="qprompt">Episodic task, rewards \(R_1{=}4,\,R_2{=}0,\,R_3{=}2,\,R_4{=}8\), discount \(\gamma=0.5\). Find \(G_0,G_1,G_2,G_3\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Work backward with \(G_t=R_{t+1}+\gamma G_{t+1}\), \(G_{\text{last}}=R_4\):</p>
+      <ol class="steps">
+        <li>\(G_3=R_4=8\)</li>
+        <li>\(G_2=R_3+0.5G_3=2+0.5(8)=6\)</li>
+        <li>\(G_1=R_2+0.5G_2=0+0.5(6)=3\)</li>
+        <li>\(G_0=R_1+0.5G_1=4+0.5(3)=5.5\)</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> \(G_0=5.5,\;G_1=3,\;G_2=6,\;G_3=8\). (Direct check: \(G_0=4+0.5\cdot0+0.25\cdot2+0.125\cdot8=5.5\) ✓)</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 1.2 · Infinite constant reward</span></div><div class="qbody">
+    <div class="qprompt">A continuing task gives reward \(+3\) on <em>every</em> step forever. \(\gamma=0.9\). What is the return \(G_0\)?</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Geometric series \(G_0=3+3\gamma+3\gamma^2+\cdots=3\sum_{k\ge0}\gamma^k=\dfrac{3}{1-\gamma}\):</p>
+      <div class="mathblock">\[ G_0=\frac{3}{1-0.9}=\frac{3}{0.1}=30 \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(G_0=30\). General rule: a constant reward \(c\) forever is worth \(c/(1-\gamma)\). This is also why \(\gamma<1\) is needed — at \(\gamma=1\) the sum diverges.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 1.3 · TD(0) update</span></div><div class="qbody">
+    <div class="qprompt">Current estimate \(V(S_t)=10\). The agent observes reward \(R_{t+1}=2\) and moves to \(S_{t+1}\) with \(V(S_{t+1})=6\). Step size \(\alpha=0.1\). Update \(V(S_t)\) for (a) \(\gamma=1\) and (b) \(\gamma=0.9\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Rule: \(V(S_t)\leftarrow V(S_t)+\alpha[\,R_{t+1}+\gamma V(S_{t+1})-V(S_t)\,]\).</p>
+      <ol class="steps">
+        <li><strong>γ=1:</strong> target \(=2+1(6)=8\); error \(=8-10=-2\); \(V\leftarrow 10+0.1(-2)=\mathbf{9.8}\).</li>
+        <li><strong>γ=0.9:</strong> target \(=2+0.9(6)=7.4\); error \(=7.4-10=-2.6\); \(V\leftarrow 10+0.1(-2.6)=\mathbf{9.74}\).</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> (a) 9.8 &nbsp; (b) 9.74. Both drop because the successor (6) is worth less than the current estimate (10) ⇒ negative TD error.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 1.4 · Discount changes the verdict</span></div><div class="qbody">
+    <div class="qprompt">Reward sequence \(R=(10,0,0,0,10)\). Compute \(G_0\) for \(\gamma=0.9\) and \(\gamma=0.5\), and say what it tells you.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Only \(R_1\) and \(R_5\) are non-zero, so \(G_0=10+\gamma^4(10)\).</p>
+      <ol class="steps">
+        <li>\(\gamma=0.9:\;G_0=10+0.9^4(10)=10+0.6561(10)=10+6.561=\mathbf{16.561}\)</li>
+        <li>\(\gamma=0.5:\;G_0=10+0.5^4(10)=10+0.0625(10)=10+0.625=\mathbf{10.625}\)</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Interpretation</span> With \(\gamma=0.9\) the far-off +10 still contributes 6.56 (far-sighted). With \(\gamma=0.5\) it contributes only 0.625 — a myopic agent barely values it. Same rewards, different priorities.</div>
+    </div>
+  </div></div>
+
+  <!-- ================= TOPIC 2 ================= -->
+  <h2 id="t2">② Multi-armed bandits &nbsp;<span class="small">(see <a href="t2-bandits.html">Topic ②</a>)</span></h2>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 2.1 · Sample-average Q (stationary)</span></div><div class="qbody">
+    <div class="qprompt">One arm returns rewards \(1,1,2,2,3\) on successive pulls. Track \(Q\) using the sample-average rule \(Q_{n+1}=Q_n+\frac1n[R_n-Q_n]\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="tbl-wrap"><table>
+        <tr><th>pull n</th><th>reward</th><th>update</th><th>Q</th></tr>
+        <tr><td>1</td><td>1</td><td>first sample</td><td>1.000</td></tr>
+        <tr><td>2</td><td>1</td><td>\(1+\tfrac12(1-1)\)</td><td>1.000</td></tr>
+        <tr><td>3</td><td>2</td><td>\(1+\tfrac13(2-1)\)</td><td>1.333</td></tr>
+        <tr><td>4</td><td>2</td><td>\(1.333+\tfrac14(2-1.333)\)</td><td>1.500</td></tr>
+        <tr><td>5</td><td>3</td><td>\(1.5+\tfrac15(3-1.5)\)</td><td class="hl">1.800</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Answer</span> Final \(Q=1.8\) — exactly the plain mean \((1{+}1{+}2{+}2{+}3)/5=1.8\). The incremental rule just computes the running average.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 2.2 · Constant-α Q (non-stationary)</span></div><div class="qbody">
+    <div class="qprompt">Same rewards \(1,1,2,2,3\), but now use constant \(\alpha=0.3\), \(Q_1=0\). Track \(Q\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>\(Q\leftarrow Q+0.3(R-Q)\):</p>
+      <ol class="steps">
+        <li>\(r=1:\;0+0.3(1-0)=0.3\)</li>
+        <li>\(r=1:\;0.3+0.3(1-0.3)=0.51\)</li>
+        <li>\(r=2:\;0.51+0.3(2-0.51)=0.957\)</li>
+        <li>\(r=2:\;0.957+0.3(2-0.957)=1.2699\)</li>
+        <li>\(r=3:\;1.2699+0.3(3-1.2699)=1.78893\)</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> \(Q\approx1.789\). Slightly below the sample-average 1.8 here, but the key difference is that constant-α keeps weighting recent rewards more — it would <em>track</em> a changing arm, which the sample average cannot.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 2.3 · Which picks were exploratory?</span></div><div class="qbody">
+    <div class="qprompt">Arms w, x, y, z; ε-greedy; sample averages; all \(Q_1=0\). Picks/rewards: <code>w:2, x:5, x:1, y:3, w:4, z:0</code>. Which steps were definitely exploratory, and which only possibly?</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="tbl-wrap"><table>
+        <tr><th>t</th><th>pick</th><th>Q before (w,x,y,z)</th><th>greedy</th><th>verdict</th></tr>
+        <tr><td>1</td><td>w</td><td>0,0,0,0</td><td>all tie</td><td class="hl-amber">possible</td></tr>
+        <tr><td>2</td><td>x</td><td>2,0,0,0</td><td>w</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>3</td><td>x</td><td>2,5,0,0</td><td>x</td><td class="hl-amber">possible</td></tr>
+        <tr><td>4</td><td>y</td><td>2,3,0,0</td><td>x</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>5</td><td>w</td><td>2,3,3,0</td><td>x,y</td><td class="hl">DEFINITE</td></tr>
+        <tr><td>6</td><td>z</td><td>3,3,3,0</td><td>w,x,y</td><td class="hl">DEFINITE</td></tr>
+      </table></div>
+      <p class="small">Updates: after x:5 then x:1 ⇒ Q(x)=(5+1)/2=3; after w:2 then w:4 ⇒ Q(w)=(2+4)/2=3.</p>
+      <div class="answer-final"><span class="lbl">Answer</span> Definitely exploratory: <strong>t = 2, 4, 5, 6</strong> (a non-max arm was chosen). Possibly: <strong>t = 1</strong> (all tied) and <strong>t = 3</strong> (x was the max). Verify it live on the <a href="tools.html#explore">exploration analyzer</a>.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 2.4 · UCB action selection</span></div><div class="qbody">
+    <div class="qprompt">At time \(t=6\) you have arm A: \(Q=2.0,N=3\); B: \(Q=2.5,N=1\); C: \(Q=1.0,N=1\). Using UCB with \(c=2\), which arm is selected?</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>\(\text{UCB}(a)=Q(a)+c\sqrt{\dfrac{\ln t}{N(a)}}\), with \(\ln 6=1.7918\):</p>
+      <ol class="steps">
+        <li>A: \(2.0+2\sqrt{1.7918/3}=2.0+2(0.7728)=3.546\)</li>
+        <li>B: \(2.5+2\sqrt{1.7918/1}=2.5+2(1.3386)=5.177\)</li>
+        <li>C: \(1.0+2\sqrt{1.7918/1}=1.0+2.677=3.677\)</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> Select <strong>B</strong> (UCB ≈ 5.18). It wins on both counts — highest estimate <em>and</em> high uncertainty (tried once). Note C, despite the lowest \(Q\), outranks A purely because it is under-explored.</div>
+    </div>
+  </div></div>
+
+  <!-- ================= TOPIC 3 ================= -->
+  <h2 id="t3">③ MDPs &amp; Bellman &nbsp;<span class="small">(see <a href="t3-mdps.html">Topic ③</a>)</span></h2>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 3.1 · One-step Bellman (stochastic)</span></div><div class="qbody">
+    <div class="qprompt">State \(s\), two actions, \(\pi(a_1)=\pi(a_2)=0.5\), \(\gamma=0.9\). Action \(a_1\to s_1\) (reward 5) for sure. Action \(a_2\to s_2\) (reward 10) w.p. 0.5 or \(s_3\) (reward 0) w.p. 0.5. Given \(v(s_1)=10,\,v(s_2)=20,\,v(s_3)=0\), compute \(v_\pi(s)\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Compute each action’s value, then average under \(\pi\):</p>
+      <ol class="steps">
+        <li>\(q(s,a_1)=5+0.9(10)=14\)</li>
+        <li>\(q(s,a_2)=0.5[10+0.9(20)]+0.5[0+0.9(0)]=0.5(28)+0.5(0)=14\)</li>
+        <li>\(v_\pi(s)=0.5(14)+0.5(14)=14\)</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> \(v_\pi(s)=14\). (Inner sum first over outcomes \((p,r)\), then outer sum over actions weighted by \(\pi\) — exactly the state-value Bellman equation.)</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 3.2 · Action-value from state-values</span></div><div class="qbody">
+    <div class="qprompt">Action \(a\) from \(s\) leads to \(s_1\) (reward 2) w.p. 0.7 and \(s_2\) (reward −1) w.p. 0.3. \(\gamma=0.8\), \(v(s_1)=5\), \(v(s_2)=10\). Find \(q_\pi(s,a)\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ q_\pi(s,a)=\sum_{s',r}p[r+\gamma v(s')] = 0.7[2+0.8(5)]+0.3[-1+0.8(10)] \]</div>
+      <p>\(=0.7[2+4]+0.3[-1+8]=0.7(6)+0.3(7)=4.2+2.1\).</p>
+      <div class="answer-final"><span class="lbl">Answer</span> \(q_\pi(s,a)=6.3\).</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 3.3 · Solve \(v_\pi\) exactly (2 states) + reward scaling</span></div><div class="qbody">
+    <div class="qprompt">A deterministic policy gives: from A → B (reward 2); from B → A (reward 4). \(\gamma=0.5\). Solve \(v(A),v(B)\) exactly. Then: what happens if all rewards are tripled?</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Two simultaneous Bellman equations:</p>
+      <div class="mathblock">\[ v(A)=2+0.5\,v(B),\qquad v(B)=4+0.5\,v(A) \]</div>
+      <ol class="steps">
+        <li>Substitute: \(v(A)=2+0.5(4+0.5\,v(A))=4+0.25\,v(A)\).</li>
+        <li>\(0.75\,v(A)=4\Rightarrow v(A)=\tfrac{16}{3}\approx5.33\).</li>
+        <li>\(v(B)=4+0.5(\tfrac{16}{3})=\tfrac{20}{3}\approx6.67\).</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> \(v(A)=16/3\approx5.33,\;v(B)=20/3\approx6.67\). <strong>Tripling rewards</strong> multiplies both values by 3 (\(v(A)\to16\), \(v(B)\to20\)); the policy is unchanged because relative orderings are preserved.</div>
+    </div>
+  </div></div>
+
+  <!-- ================= TOPIC 4 ================= -->
+  <h2 id="t4">④ Dynamic programming &nbsp;<span class="small">(see <a href="t4-dynamic-programming.html">Topic ④</a>)</span></h2>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 4.1 · Iterative policy evaluation</span></div><div class="qbody">
+    <div class="qprompt">Chain A → B → C → T (terminal). The policy always moves right. Rewards: A→B = 0, B→C = 0, C→T = 1. \(\gamma=0.9\), all \(V_0=0\), <strong>synchronous</strong>. Run sweeps until convergence.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Each sweep: \(V(A)=0+0.9V(B)\), \(V(B)=0+0.9V(C)\), \(V(C)=1+0.9V(T)=1\) (using the <em>old</em> table).</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>sweep</th><th>V(A)</th><th>V(B)</th><th>V(C)</th></tr>
+        <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+        <tr><td>2</td><td>0</td><td>0.9</td><td>1</td></tr>
+        <tr><td>3</td><td class="hl">0.81</td><td class="hl">0.9</td><td class="hl">1</td></tr>
+        <tr><td>4</td><td>0.81</td><td>0.9</td><td>1</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Answer</span> Converges to \(V(C)=1,\,V(B)=0.9,\,V(A)=0.81\) — i.e. \(\gamma^{\text{(steps to goal)}}\): \(0.9^1,0.9^1\cdots\) Each sweep propagates the reward one step further left.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 4.2 · Value iteration</span></div><div class="qbody">
+    <div class="qprompt">States 1 and 2 (plus terminals L and R). From either state: <em>right</em> moves toward R, <em>left</em> toward L. Entering R gives +10, entering L gives 0, all else 0. Layout: L – 1 – 2 – R. \(\gamma=0.9\), \(V_0=0\), synchronous. Show 3 iterations and the greedy policy.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>\(V(s)=\max(\text{left}: r+0.9V(s_\text{left}),\ \text{right}: r+0.9V(s_\text{right}))\). State 1’s left = L (term, 0); state 2’s right = R (term, +10).</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>iter</th><th>V(1) = max(left, right)</th><th>V(2) = max(left, right)</th></tr>
+        <tr><td>1</td><td>max(0, 0.9·0)=0</td><td>max(0.9·0, 10)=10</td></tr>
+        <tr><td>2</td><td>max(0, 0.9·10)=9</td><td>max(0.9·0, 10)=10</td></tr>
+        <tr><td>3</td><td>max(0, 0.9·10)=9</td><td>max(0.9·9, 10)=10</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Answer</span> Converges to \(V(1)=9,\,V(2)=10\); greedy policy = <strong>go right</strong> in both states (toward the +10 goal).</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 4.3 · One round of policy iteration</span></div><div class="qbody">
+    <div class="qprompt">State A has two actions: <strong>α</strong> → B (reward 20, B terminal) and <strong>β</strong> → A (reward 1, self-loop). \(\gamma=0.9\). Start from policy \(\pi=\beta\). Run policy iteration.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <ol class="steps">
+        <li><strong>Evaluate \(\pi=\beta\):</strong> \(v(A)=1+0.9\,v(A)\Rightarrow v(A)=\tfrac{1}{0.1}=10\).</li>
+        <li><strong>Improve:</strong> \(q(A,\alpha)=20+0.9(0)=20\); \(q(A,\beta)=1+0.9(10)=10\). Since \(20>10\), switch to \(\pi=\alpha\).</li>
+        <li><strong>Evaluate \(\pi=\alpha\):</strong> \(v(A)=20+0.9(0)=20\).</li>
+        <li><strong>Improve:</strong> \(q(A,\alpha)=20\); \(q(A,\beta)=1+0.9(20)=19\). Now \(20>19\) ⇒ \(\alpha\) stays. Policy stable.</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> Optimal policy \(\pi_*=\alpha\) (take the +20 exit), \(v_*(A)=20\). Note how the first improvement flipped β→α; the second confirmed stability.</div>
+    </div>
+  </div></div>
+
+  <!-- ================= TOPIC 5 ================= -->
+  <h2 id="t5">⑤ Monte Carlo &nbsp;<span class="small">(see <a href="t5-monte-carlo.html">Topic ⑤</a>)</span></h2>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 5.1 · First-visit vs every-visit</span></div><div class="qbody">
+    <div class="qprompt">\(\gamma=1\). Episodes (state→reward→…): &nbsp; <code>Ep1: A(3) B(2) A(1) T</code> &nbsp; <code>Ep2: B(4) A(2) T</code>. Estimate \(V(A),V(B)\) by first-visit and every-visit MC.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>With \(\gamma=1\), a visit’s return = sum of rewards from that visit to T.</p>
+      <p><strong>Ep1</strong> returns: first A = 3+2+1 = 6; B = 2+1 = 3; second A = 1. &nbsp; <strong>Ep2</strong>: B = 4+2 = 6; A = 2.</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>state</th><th>first-visit returns</th><th>V (FV)</th><th>every-visit returns</th><th>V (EV)</th></tr>
+        <tr><td>A</td><td>6, 2</td><td class="hl">4.0</td><td>6, 1, 2</td><td class="hl">3.0</td></tr>
+        <tr><td>B</td><td>3, 6</td><td class="hl">4.5</td><td>3, 6</td><td class="hl">4.5</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Answer</span> FV: \(V(A)=4.0,\,V(B)=4.5\). EV: \(V(A)=3.0,\,V(B)=4.5\). They differ for A because the second (low) A-return in Ep1 is counted by every-visit but not first-visit.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 5.2 · MC control → greedy policy</span></div><div class="qbody">
+    <div class="qprompt">\(\gamma=1\), init \(Q=0\). Episodes (state,action,(reward)): &nbsp; <code>Ep1: S1,u,(2) S2,d,(3) T</code> &nbsp; <code>Ep2: S1,d,(0) S2,d,(4) T</code>. First-visit MC: find \(Q\) and the greedy policy.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Returns (γ=1):</p>
+      <ul>
+        <li>Ep1: \((S1,u)=2+3=5\); \((S2,d)=3\).</li>
+        <li>Ep2: \((S1,d)=0+4=4\); \((S2,d)=4\).</li>
+      </ul>
+      <p>Average per (s,a):</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>(s,a)</th><th>returns</th><th>Q</th></tr>
+        <tr><td>(S1, u)</td><td>5</td><td class="hl">5.0</td></tr>
+        <tr><td>(S1, d)</td><td>4</td><td>4.0</td></tr>
+        <tr><td>(S2, d)</td><td>3, 4</td><td class="hl">3.5</td></tr>
+      </table></div>
+      <div class="answer-final"><span class="lbl">Answer</span> Greedy policy: \(\pi(S1)=u\) (5 &gt; 4), \(\pi(S2)=d\) (only action seen). Make it ε-greedy for continued exploration.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 5.3 · Importance-sampling ratio</span></div><div class="qbody">
+    <div class="qprompt">A 3-step trajectory. Target/behaviour action probabilities along it: step 0 \(\pi{=}0.9,\,b{=}0.5\); step 1 \(\pi{=}0.2,\,b{=}0.4\); step 2 \(\pi{=}1.0,\,b{=}0.5\). Find the importance-sampling ratio \(\rho_{0:2}\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ \rho_{0:2}=\prod_{k=0}^{2}\frac{\pi(A_k|S_k)}{b(A_k|S_k)}=\frac{0.9}{0.5}\cdot\frac{0.2}{0.4}\cdot\frac{1.0}{0.5}=1.8\times0.5\times2.0 \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(\rho=1.8\). The transition probabilities cancel, so only the policies enter. <span class="small">If any step had \(\pi=0\) (the target would never take that action), the whole product — and the weighted return — would be 0.</span></div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 5.4 · Incremental MC update</span></div><div class="qbody">
+    <div class="qprompt">A state’s current estimate is \(V=5\) after 3 returns. A 4th episode gives return \(G=8\). Update \(V\) using the incremental average \(V\leftarrow V+\frac1N(G-V)\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>This is the 4th return, so \(N=4\):</p>
+      <div class="mathblock">\[ V\leftarrow 5+\tfrac14(8-5)=5+0.75=5.75 \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(V=5.75\). Identical idea to the bandit/TD update — move the old estimate a \(1/N\) fraction toward the new sample.</div>
+    </div>
+  </div></div>
+
+  <div class="callout info"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">Want more, with your own numbers?</div>
+  The <a href="tools.html">Interactive Tools</a> page lets you re-run the return calculator, bandit Q-tracker, exploration analyzer and value-iteration replayer on any inputs — perfect for inventing extra drills.</div></div>
+
+  <div class="pager">
+    <a href="tools.html"><div class="dir">← Back</div><div class="ttl">🧮 Tools</div></a>
+    <a class="next" href="cheatsheet.html"><div class="dir">Next →</div><div class="ttl">📋 Cheat-Sheet</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>
