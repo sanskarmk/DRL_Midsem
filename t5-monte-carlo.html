@@ -106,7 +106,9 @@ E3: C x(+2) B y(+12) C x(+20) T</code></pre>
   <div class="answer-final"><span class="lbl">Greedy policy</span> \(\pi(A){=}x,\;\pi(B){=}y,\;\pi(C){=}x\) → then made ε-greedy. Step-by-step return derivation on the <a href="s-jul2024-regular.html">Jul 2024-regular page</a>.</div>
   </div></div>
 
-  <h2 id="offpolicy">8. Off-policy learning &amp; importance sampling</h2>
+  <h2 id="offpolicy">8. Off-policy learning &amp; importance sampling <span class="scope-tag">Not in mid-sem</span></h2>
+  <div class="callout scope"><div class="cico">⛔</div><div class="cbody"><div class="ctitle">Out of scope for your mid-sem</div>
+  Per your professor’s lecture, the mid-sem covers Monte Carlo only up to <strong>on-policy</strong> methods. <strong>Off-policy MC, importance sampling, behaviour/target policies</strong> were taught later and are <strong>not</strong> examinable now. This section is kept for completeness — skip it for mid-sem prep.</div></div>
   <p>Learn about a <strong>target</strong> policy \(\pi\) while behaving with a different <strong>behaviour</strong> policy \(b\) (which explores). Reweight returns by the <strong>importance-sampling ratio</strong>:</p>
   <div class="mathblock">\[ \rho_{t:T-1}=\prod_{k=t}^{T-1}\frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)} \]</div>
   <div class="callout info"><div class="cico">🔗</div><div class="cbody"><div class="ctitle">Ratio vs. model dynamics (Jul 2023 Q4b)</div>

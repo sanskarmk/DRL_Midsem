@@ -19,6 +19,7 @@ window.MathJax = {
 const NAV = [
   { h:'Start here', items:[
     ['index.html','🏠','Home / Dashboard',''],
+    ['story.html','📖','Syllabus as a Story','NEW'],
     ['cheatsheet.html','📋','Exam Cheat-Sheet',''],
   ]},
   { h:'Topics — learn the theory', items:[

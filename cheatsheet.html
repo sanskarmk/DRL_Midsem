@@ -68,7 +68,9 @@
     <strong>Deterministic-policy MC fails</strong>: untried actions never updated ⇒ use ε-soft.
   </div></div>
 
-  <h2>Off-policy &amp; importance sampling</h2>
+  <h2>Off-policy &amp; importance sampling <span class="scope-tag">Not in mid-sem</span></h2>
+  <div class="callout scope no-print"><div class="cico">⛔</div><div class="cbody"><div class="ctitle">Out of scope for your mid-sem</div>
+  Off-policy MC &amp; importance sampling are <strong>not</strong> examinable (professor’s note). Listed only for completeness.</div></div>
   <div class="mathblock">\[ \rho_{t:T-1}=\prod_{k=t}^{T-1}\frac{\pi(A_k|S_k)}{b(A_k|S_k)} \]</div>
   <p>Model dynamics cancel (numerator = denominator) ⇒ ρ depends only on policies. <strong>Coverage:</strong> need \(b(a|s)&gt;0\) wherever \(\pi(a|s)&gt;0\). If the episode contains an action π never takes, ρ = 0.</p>
 

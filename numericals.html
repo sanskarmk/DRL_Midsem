@@ -19,12 +19,59 @@
   <button class="btn ghost no-print" onclick="revealAll()">Reveal all solutions</button>
 
   <div class="toc"><h4>Jump to a topic</h4><ul>
+    <li><a href="#lecture">⭐ Straight from the lecture</a></li>
     <li><a href="#t1">① Returns, discounting &amp; TD</a></li>
     <li><a href="#t2">② Multi-armed bandits</a></li>
     <li><a href="#t3">③ MDPs &amp; Bellman</a></li>
     <li><a href="#t4">④ Dynamic programming</a></li>
     <li><a href="#t5">⑤ Monte Carlo</a></li>
   </ul></div>
+
+  <!-- ================= LECTURE EXAMPLES ================= -->
+  <h2 id="lecture">⭐ Straight from the professor's lecture</h2>
+  <div class="callout lecture"><div class="cico">🎓</div><div class="cbody"><div class="ctitle">The exact example types flagged as “guaranteed” in class</div>
+  These four mirror the numbers your professor worked through — return, state value, action value, and ε-greedy probabilities. If you can do these cold, you’ve nailed the highest-priority numerical types.</div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Lecture 1 · Return \(G_t\)</span></div><div class="qbody">
+    <div class="qprompt">Rewards \(=[2,3,5]\), \(\gamma=0.9\). Find \(G_0\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ G_0=2+0.9(3)+0.9^2(5)=2+2.7+4.05 \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(G_0=8.75\).</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Lecture 2 · State value from returns</span></div><div class="qbody">
+    <div class="qprompt">From state \(s\), three episodes gave returns \(10,\,8,\,12\). Estimate \(V(s)\) by Monte Carlo.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ V(s)=\frac{10+8+12}{3}=\frac{30}{3} \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(V(s)=10\). MC value = plain average of the observed returns from that state.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Lecture 3 · Action value from returns</span></div><div class="qbody">
+    <div class="qprompt">State–action pair \((s,a)\) gave returns \(5,\,7,\,6\). Estimate \(Q(s,a)\).</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <div class="mathblock">\[ Q(s,a)=\frac{5+7+6}{3}=\frac{18}{3} \]</div>
+      <div class="answer-final"><span class="lbl">Answer</span> \(Q(s,a)=6\). Same averaging idea, but keyed on the \((s,a)\) pair instead of just the state.</div>
+    </div>
+  </div></div>
+
+  <div class="qcard"><div class="qhead"><span class="qno">Lecture 4 · ε-greedy probabilities</span></div><div class="qbody">
+    <div class="qprompt">\(\varepsilon=0.2\), \(|\mathcal A|=4\) actions. Give the probability of the best action and of each other action.</div>
+    <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
+    <div class="solution">
+      <p>Best action: \(1-\varepsilon+\dfrac{\varepsilon}{|\mathcal A|}\); every other action: \(\dfrac{\varepsilon}{|\mathcal A|}\).</p>
+      <ol class="steps">
+        <li>Best \(=1-0.2+\dfrac{0.2}{4}=0.8+0.05=0.85\)</li>
+        <li>Each other \(=\dfrac{0.2}{4}=0.05\)</li>
+        <li>Check: \(0.85+3(0.05)=1.0\) ✓</li>
+      </ol>
+      <div class="answer-final"><span class="lbl">Answer</span> Best action \(=0.85\); each of the other three \(=0.05\).</div>
+    </div>
+  </div></div>
 
   <!-- ================= TOPIC 1 ================= -->
   <h2 id="t1">① Returns, discounting &amp; TD &nbsp;<span class="small">(see <a href="t1-rl-fundamentals.html">Topic ①</a>)</span></h2>
@@ -276,7 +323,9 @@
     </div>
   </div></div>
 
-  <div class="qcard"><div class="qhead"><span class="qno">Drill 5.3 · Importance-sampling ratio</span></div><div class="qbody">
+  <div class="qcard"><div class="qhead"><span class="qno">Drill 5.3 · Importance-sampling ratio <span class="scope-tag">Not in mid-sem</span></span></div><div class="qbody">
+    <div class="callout scope"><div class="cico">⛔</div><div class="cbody"><div class="ctitle">Out of scope for your mid-sem</div>
+    Importance sampling belongs to <strong>off-policy</strong> MC, which your professor excluded from the mid-sem. Skip this drill for exam prep — it’s here for completeness.</div></div>
     <div class="qprompt">A 3-step trajectory. Target/behaviour action probabilities along it: step 0 \(\pi{=}0.9,\,b{=}0.5\); step 1 \(\pi{=}0.2,\,b{=}0.4\); step 2 \(\pi{=}1.0,\,b{=}0.5\). Find the importance-sampling ratio \(\rho_{0:2}\).</div>
     <div class="sol-toggle"><span class="chev">▶</span><span class="lbl-txt">Show solution</span></div>
     <div class="solution">

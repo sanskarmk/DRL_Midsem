@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 The Whole Syllabus as One Story · DRL Exam Prep</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/app.js"></script>
+</head>
+<body data-page="story.html">
+<button class="theme-btn">🌙</button><button class="menu-btn">☰</button><div class="scrim"></div>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <main class="content"><div class="page">
+
+  <span class="eyebrow">Big picture · 12-minute read</span>
+  <h1>The whole syllabus as one story</h1>
+  <p class="lead">Meet <strong>Riya</strong>, who opens a tea stall and slowly learns to run it brilliantly. Her journey <em>is</em> the syllabus: every concept appears exactly when she needs it. Read it once and the formulas stop being abstract.</p>
+
+  <div class="callout intuition"><div class="cico">🧵</div><div class="cbody"><div class="ctitle">The single thread</div>
+  One idea runs through everything: <strong>choose actions now to maximise reward over time.</strong> Bandits, MDPs, dynamic programming and Monte Carlo are just four situations Riya finds herself in — with more or less information about her world.</div></div>
+
+  <div class="toc"><h4>Riya's journey</h4><ul>
+    <li><a href="#c0">Chapter 0 — Opening day (the vocabulary)</a></li>
+    <li><a href="#c1">Chapter 1 — Which tea to feature? (bandits)</a></li>
+    <li><a href="#c2">Chapter 2 — The mobile cart (MDPs)</a></li>
+    <li><a href="#c3">Chapter 3 — The magic spreadsheet (dynamic programming)</a></li>
+    <li><a href="#c4">Chapter 4 — Learning by living it (Monte Carlo) ⭐</a></li>
+    <li><a href="#c5">Chapter 5 — Not waiting till closing (a peek at TD)</a></li>
+    <li><a href="#c6">Chapter 6 — What's on the mid-sem</a></li>
+    <li><a href="#cast">The cast → RL glossary</a></li>
+  </ul></div>
+
+  <!-- C0 -->
+  <h2 id="c0">Chapter 0 — Opening day</h2>
+  <p>Riya wheels her little tea stall to a street corner. She doesn’t know which teas will sell or when the rush comes — she’ll have to <em>learn by doing</em>. Nobody hands her an instruction manual saying “at 9am sell ginger tea.” She only finds out how good a choice was <em>after</em> she makes it, by counting the money in her tin.</p>
+  <p>That single sentence is reinforcement learning. Riya is the <strong>agent</strong>. The street — weather, passers-by, the rival stall — is the <strong>environment</strong>. Each morning she sees a <strong>state</strong> (it’s raining, the bus stop is crowded, she’s low on milk), takes an <strong>action</strong> (brew masala chai, set the price), and the world responds with a <strong>reward</strong> (₹ profit that hour) and a new state.</p>
+  <p>One full day from setup to packing up is an <strong>episode</strong>. The exact play-by-play of that day — situation → choice → money, situation → choice → money — is a <strong>trajectory</strong>. Riya doesn’t care about a single hour; she cares about the day’s <strong>return</strong>: the total profit still to come, with today’s rupee valued a touch more than next week’s (that “impatience” is the <strong>discount factor</strong> \(\gamma\)).</p>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">The one formula under all of it</div>
+  <div class="mathblock">\[ G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots \]</div>
+  If the next three hours earn ₹2, ₹3, ₹5 and \(\gamma=0.9\): \(G_0 = 2 + 0.9(3) + 0.81(5) = \mathbf{8.75}\). A small \(\gamma\) makes her short-sighted (grab money now); a large \(\gamma\) makes her patient (build for later).</div></div>
+  <div class="callout info"><div class="cico">🔖</div><div class="cbody"><div class="ctitle">Maps to → Topic ①</div>
+  agent · environment · state · action · reward · episode · trajectory · return \(G_t\) · discount \(\gamma\).</div></div>
+
+  <!-- C1 -->
+  <h2 id="c1">Chapter 1 — Which tea to feature?</h2>
+  <p>Riya’s corner is fixed and her regulars are whoever walks by. Each morning she can feature <em>one</em> special: masala, ginger, lemon, or plain. Crucially, today’s choice doesn’t change <em>who</em> shows up tomorrow — it only changes <em>today’s</em> takings. Four levers, each with an unknown average payoff, no lasting consequences. This is a <strong>multi-armed bandit</strong> (think four slot-machine arms).</p>
+  <p>She keeps a running estimate \(Q(\text{tea})\) of each special’s average profit. Now the eternal tension: <strong>exploit</strong> (sell the one that’s done best so far) or <strong>explore</strong> (try another in case it’s secretly better)? Do only the first and she may never discover a winner; do only the second and she wastes money testing duds.</p>
+  <p>Her rule of thumb is <strong>ε-greedy</strong>: most days pick the current best, but with a small probability \(\varepsilon\) roll a die and try a random tea. Two cleverer habits: she could start by <em>assuming every tea is amazing</em> (<strong>optimistic initial values</strong>), which nudges her to try them all early; or she could deliberately re-test the teas she’s <em>least sure</em> about (<strong>UCB</strong>). And when a festival suddenly changes everyone’s taste (a <strong>non-stationary</strong> world), she stops giving old days equal weight and switches to a <strong>constant step-size \(\alpha\)</strong> so recent sales count more.</p>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">How she updates a tea’s estimate</div>
+  <div class="mathblock">\[ Q \leftarrow Q + \alpha\,[\,\text{today's profit} - Q\,] \]</div>
+  “Nudge my estimate toward what just happened.” \(\alpha=1/n\) averages everything equally (stable world); a fixed \(\alpha\) (say 0.5) tracks a changing world.</div></div>
+  <div class="callout info"><div class="cico">🔖</div><div class="cbody"><div class="ctitle">Maps to → Topic ②</div>
+  bandit · \(Q(a)\) · exploration vs exploitation · ε-greedy · optimistic initial values · UCB · stationary vs non-stationary · sample-average vs constant-α.</div></div>
+
+  <!-- C2 -->
+  <h2 id="c2">Chapter 2 — The mobile cart</h2>
+  <p>Business grows, so Riya buys a cart she can move. Everything changes. If she parks near the college today, students become regulars and come back tomorrow — so <em>where she is now shapes where she’ll be next</em>. If she over-sells a gimmicky tea, her reputation dips and future sales fall. Her actions now have <strong>consequences that ripple forward</strong>.</p>
+  <p>This is no longer a bandit; it’s a <strong>Markov Decision Process</strong>. The <strong>state</strong> genuinely matters now (location, reputation, stock), and choosing an action moves her to a new state according to the world’s <strong>dynamics</strong>. The <strong>Markov</strong> part is a comforting simplification: tomorrow depends only on <em>today’s</em> situation, not her entire life story — so she only has to reason about the present state.</p>
+  <p>To choose well she needs to value the <em>future</em>, not just the next hour. The <strong>state value</strong> \(V(s)\) is “how much total profit can I expect if I’m in situation \(s\) and keep running things my way?” The <strong>action value</strong> \(Q(s,a)\) is the same but committing to one action first. These tie together through the <strong>Bellman equation</strong>: the value of now = the reward I get + the discounted value of wherever I land next.</p>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">Value = reward now + discounted value next</div>
+  <div class="mathblock">\[ V_\pi(s) = \mathbb{E}_\pi\!\big[\,G_t \mid S_t=s\,\big], \qquad Q_\pi(s,a) = \mathbb{E}_\pi\!\big[\,G_t \mid S_t=s, A_t=a\,\big] \]</div>
+  A tempting high-profit tea (big reward) that wrecks her reputation (low next-state value) can have a <em>lower</em> value than a modest, loyalty-building choice. Reward is the hour; value is the whole future.</div></div>
+  <div class="callout info"><div class="cico">🔖</div><div class="cbody"><div class="ctitle">Maps to → Topic ③</div>
+  MDP · states &amp; transitions · Markov property · \(V_\pi(s)\) · \(Q_\pi(s,a)\) · Bellman equation · optimal policy \(\pi_*\).</div></div>
+
+  <!-- C3 -->
+  <h2 id="c3">Chapter 3 — The magic spreadsheet</h2>
+  <p>Imagine the city office gives Riya a perfect spreadsheet: for <em>every</em> spot and <em>every</em> choice, exactly how many customers arrive, how much she’ll earn, and where the crowd drifts next. She now owns a complete <strong>model</strong> of her world. She doesn’t need to stand in the rain experimenting — she can <strong>plan</strong> the optimal week at her kitchen table. This is <strong>dynamic programming</strong>.</p>
+  <p>She works it in two repeating moves. First <strong>policy evaluation</strong>: take her current plan and, using the spreadsheet, calculate what each spot is really worth under that plan. Then <strong>policy improvement</strong>: at each spot, switch to whichever action the numbers now say is best. Evaluate, improve, evaluate, improve… this loop is <strong>policy iteration</strong>, and it provably climbs to the best possible plan. A shortcut, <strong>value iteration</strong>, skips the full evaluation and just keeps taking the single best next step until the values settle.</p>
+  <div class="callout intuition"><div class="cico">💡</div><div class="cbody"><div class="ctitle">The catch</div>
+  DP is powerful but needs <strong>two luxuries</strong>: a complete, accurate model, and a world small enough to sweep every state. Riya rarely has either in real life — which is exactly why the next chapter exists.</div></div>
+  <div class="callout info"><div class="cico">🔖</div><div class="cbody"><div class="ctitle">Maps to → Topic ④</div>
+  model-based planning · policy evaluation · policy improvement · policy iteration · value iteration (synchronous vs in-place).</div></div>
+
+  <!-- C4 -->
+  <h2 id="c4">Chapter 4 — Learning by living it &nbsp;<span class="scope-tag" style="background:var(--accent)">Mid-sem core</span></h2>
+  <p>There is no magic spreadsheet. Riya doesn’t know the city’s dynamics — so she does the only honest thing: she <strong>runs full days and writes down what actually happened</strong>. This is <strong>Monte Carlo</strong> learning: no model, no theory, just lived experience averaged over many complete episodes.</p>
+  <p>At the end of each day she replays it. For every situation she was in, she notes the total profit that <em>followed</em> it (the return), and she keeps a running <strong>average</strong> across all her days. After enough days, that average <em>is</em> the value of the situation.</p>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">Monte Carlo value = average of returns</div>
+  If “rainy morning at the college gate” yielded total day-returns of 10, 8 and 12 over three days, then \(V(\text{that state}) = \frac{10+8+12}{3} = \mathbf{10}\). For a specific action there, average the returns that followed that action: returns 5, 7, 6 give \(Q = \mathbf{6}\).</div></div>
+  <p>One subtlety: within a single day she might pass through “college gate, rainy” <em>twice</em>. Does she count both? <strong>First-visit MC</strong> counts only the first time per day; <strong>every-visit MC</strong> counts every time. First-visit gives cleaner, independent samples; every-visit squeezes more data out of each day. Both converge to the truth.</p>
+  <p>But averaging only teaches her about choices she actually makes. If she <em>never</em> tries lemon tea on a sunny day, she’ll never learn it’s a hit. So she must keep <strong>exploring</strong>: either deliberately begin some days in unusual situations (<strong>exploring starts</strong>), or keep a sliver of randomness in her plan forever (an <strong>ε-soft</strong> policy, e.g. ε-greedy). Then she runs the full loop — estimate \(Q\) from real days, then shift her plan toward the actions that earned most. That loop is <strong>Monte Carlo control</strong>. Because she learns from days played under <em>her own</em> (slightly random) plan, this is <strong>on-policy</strong> learning.</p>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">Keeping the door open — ε-greedy</div>
+  With \(\varepsilon=0.2\) and 4 choices, her best action still gets played \(1-\varepsilon+\frac{\varepsilon}{4}=0.85\) of the time, and each of the other three gets \(\frac{0.2}{4}=0.05\). Enough randomness to keep learning, enough focus to keep earning.</div></div>
+  <div class="callout info"><div class="cico">🔖</div><div class="cbody"><div class="ctitle">Maps to → Topic ⑤ (the heaviest mid-sem topic)</div>
+  MC prediction · first-visit vs every-visit · exploring starts · ε-soft / ε-greedy · on-policy MC control · prediction vs control · state vs action value.</div></div>
+
+  <!-- C5 -->
+  <h2 id="c5">Chapter 5 — Not waiting till closing time</h2>
+  <p>Monte Carlo makes Riya wait until she packs up to learn anything. A faster friend whispers: “Why wait? The moment the next hour goes better than you feared, update your gut feeling right then.” That’s <strong>temporal-difference (TD) learning</strong> — adjust each estimate using the very next reward plus your current guess of what comes after, instead of waiting for the full day’s total.</p>
+  <div class="callout formula"><div class="cico">🧮</div><div class="cbody"><div class="ctitle">TD in one line</div>
+  <div class="mathblock">\[ V(S_t) \leftarrow V(S_t) + \alpha\big[\,R_{t+1} + \gamma V(S_{t+1}) - V(S_t)\,\big] \]</div>
+  The bracket is her “surprise.” Note \(\alpha\) is how fast she <em>learns</em>, not how much she <em>explores</em> — a classic exam trap.</div></div>
+  <div class="callout info"><div class="cico">🔖</div><div class="cbody"><div class="ctitle">Maps to → Topic ①/⑤ (TD rule)</div>
+  TD(0) update · TD target · TD error · α as learning rate (not exploration).</div></div>
+
+  <!-- C6 -->
+  <h2 id="c6">Chapter 6 — What's actually on your mid-sem</h2>
+  <p>Riya’s whole story is fair game — <em>except</em> one chapter she hasn’t reached. One day a friend offers to share <em>her</em> sales diary, run with a totally different style, and asks Riya to learn the best plan from <em>someone else’s</em> behaviour. Doing that correctly needs reweighting every day by how likely Riya’s own plan was to act the same way — <strong>off-policy learning with importance sampling</strong>.</p>
+  <div class="callout scope"><div class="cico">⛔</div><div class="cbody"><div class="ctitle">Off-policy &amp; importance sampling — NOT in your mid-sem</div>
+  Your professor stated the mid-sem covers Monte Carlo only up to <strong>on-policy</strong> methods. <strong>Off-policy MC, importance sampling, behaviour vs target policy</strong> come later — learn the <em>concept</em> (learning from a different policy’s data) but you won’t be tested on the maths.</div></div>
+  <div class="callout intuition"><div class="cico">✅</div><div class="cbody"><div class="ctitle">So your exam playground is Chapters 0–4 (+ the TD rule)</div>
+  RL vocabulary &amp; returns · bandits &amp; ε-greedy · MDPs &amp; value functions · dynamic programming · and especially <strong>Monte Carlo prediction &amp; on-policy control</strong>. The guaranteed numericals: compute a return, average returns into \(V\)/\(Q\), first-visit vs every-visit, ε-greedy probabilities, and a small MC-control step.</div></div>
+
+  <!-- cast -->
+  <h2 id="cast">The cast → RL glossary</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th class="l">In the story</th><th class="l">In the syllabus</th></tr>
+    <tr><td class="l">Riya</td><td class="l">Agent</td></tr>
+    <tr><td class="l">The street, weather, customers</td><td class="l">Environment</td></tr>
+    <tr><td class="l">Today’s situation (weather, spot, stock)</td><td class="l">State \(S\)</td></tr>
+    <tr><td class="l">What she brews / where she parks / price</td><td class="l">Action \(A\)</td></tr>
+    <tr><td class="l">₹ profit that hour</td><td class="l">Reward \(R\)</td></tr>
+    <tr><td class="l">One full day</td><td class="l">Episode</td></tr>
+    <tr><td class="l">The day’s play-by-play</td><td class="l">Trajectory</td></tr>
+    <tr><td class="l">Total (discounted) profit ahead</td><td class="l">Return \(G_t\)</td></tr>
+    <tr><td class="l">Choosing today’s special (fixed corner)</td><td class="l">Multi-armed bandit</td></tr>
+    <tr><td class="l">Moving the cart (choices ripple forward)</td><td class="l">MDP</td></tr>
+    <tr><td class="l">The city’s perfect spreadsheet</td><td class="l">Model (of dynamics)</td></tr>
+    <tr><td class="l">Planning at the kitchen table</td><td class="l">Dynamic programming</td></tr>
+    <tr><td class="l">Learning from full days she actually ran</td><td class="l">Monte Carlo (on-policy)</td></tr>
+    <tr><td class="l">Updating mid-day on the next hour</td><td class="l">Temporal-difference learning</td></tr>
+    <tr><td class="l">Learning from a friend’s diary</td><td class="l">Off-policy (not in mid-sem)</td></tr>
+  </table></div>
+
+  <div class="callout intuition"><div class="cico">🎯</div><div class="cbody"><div class="ctitle">One-line summary to walk into the exam with</div>
+  <strong>Bandits</strong> = one repeated choice, no consequences. <strong>MDP</strong> = choices that change your future. <strong>DP</strong> = solve it by planning <em>with</em> a model. <strong>Monte Carlo</strong> = solve it by averaging real episodes <em>without</em> a model — and on-policy means you learn from your own slightly-exploratory behaviour.</div></div>
+
+  <div class="pager">
+    <a href="index.html"><div class="dir">← Home</div><div class="ttl">🏠 Dashboard</div></a>
+    <a class="next" href="numericals.html"><div class="dir">Practice →</div><div class="ttl">🔢 Numerical Drills</div></a>
+  </div>
+
+  </div></main>
+</div>
+</body>
+</html>
